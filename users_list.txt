@@ -1,0 +1,107 @@
+[
+  {
+    "name": "Nimbus Admin",
+    "email": "admin@nimbus.com",
+    "role": "admin"
+  },
+  {
+    "name": "Discipline Officer",
+    "email": "discipline@nimbus.com",
+    "role": "admin"
+  },
+  {
+    "name": ".exe",
+    "email": "exe@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "matcom",
+    "email": "matcom@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "vibhav",
+    "email": "vibhav@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "ojas",
+    "email": "ojas@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "medextrous",
+    "email": "medextrous@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "abraxas",
+    "email": "abraxas@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "metamorph",
+    "email": "metamorph@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "hermatica",
+    "email": "hermatica@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "c helix",
+    "email": "chelix@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "DOC",
+    "email": "doc@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "DND",
+    "email": "dnd@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "Team PR",
+    "email": "teampr@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "TFT",
+    "email": "tft@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "Pixonoids",
+    "email": "pixonoids@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "resurgence",
+    "email": "resurgence@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "app team",
+    "email": "appteam@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "HAT",
+    "email": "hat@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "core team",
+    "email": "coreteam@nimbus.com",
+    "role": "user"
+  },
+  {
+    "name": "Faculty View",
+    "email": "faculty@nimbus.com",
+    "role": "admin"
+  }
+]
