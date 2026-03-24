@@ -178,10 +178,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="dashboard-grid" style={{ gridTemplateColumns: user.role === 'admin' ? '250px 1.5fr 1fr' : '1.5fr 1fr' }}>
+        <div className={`dashboard-grid ${user.role === 'admin' ? 'admin-grid' : ''}`}>
           
           {user.role === 'admin' && (
-            <div className="users-list-card glass-card" style={{ maxHeight: '700px', overflowY: 'auto' }}>
+            <div className="users-list-card glass-card">
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '20px' }}>👥 Instructors</h2>
               <div className="user-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button 

@@ -172,8 +172,8 @@ export default function UserManagementPage() {
             <p>Create a user account to get started.</p>
           </div>
         ) : (
-          <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
               <thead>
                 <tr style={{ background: 'rgba(99, 102, 241, 0.1)', borderBottom: '1px solid var(--border)' }}>
                   <th style={{ padding: '16px 24px', fontWeight: '600' }}>Name</th>

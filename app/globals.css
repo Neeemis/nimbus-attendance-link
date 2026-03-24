@@ -550,6 +550,21 @@ label {
   gap: 24px;
 }
 
+.dashboard-grid.admin-grid {
+  grid-template-columns: 250px 1.5fr 1fr;
+}
+
+.users-list-card {
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid.admin-grid {
+    grid-template-columns: 1fr 1fr; /* stack instructors list correctly */
+  }
+}
+
 .calendar-card h2,
 .day-detail-card h2 {
   font-size: 1.1rem;
@@ -1002,8 +1017,8 @@ label {
   .user-name { display: none; }
 
   /* Dashboard */
-  .dashboard-grid {
-    grid-template-columns: 1fr;
+  .dashboard-grid, .dashboard-grid.admin-grid {
+    grid-template-columns: 1fr !important;
   }
 
   .stats-grid {
