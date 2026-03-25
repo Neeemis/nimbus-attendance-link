@@ -4,10 +4,18 @@ import PDFDocument from 'pdfkit';
 
 export async function GET(request) {
   const user = verifyAuth(request);
-  if (!user) return new Response(JSON.stringify({ error: 'No token' }), { status: 401 });
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'No token, authorization denied' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   if (user.email !== 'discipline@nimbus.com' && user.role !== 'admin') {
-    return new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 });
+    return new Response(JSON.stringify({ error: 'Access denied. Discipline only.' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -17,29 +25,32 @@ export async function GET(request) {
       FROM campus_status_logs l
       JOIN students s ON l.student_id = s.id
       ORDER BY l.timestamp DESC
-      LIMIT 1000
+      LIMIT 1500
     `;
 
     // Create PDF
     const doc = new PDFDocument({ margin: 40, size: 'A4' });
     const chunks = [];
     doc.on('data', (chunk) => chunks.push(chunk));
+    
     const pdfPromise = new Promise((resolve, reject) => {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
     });
 
-    // --- Header ---
+    // --- Header Section ---
     doc.fontSize(22).font('Helvetica-Bold').fillColor('#1e3a8a').text('CAMPUS STATUS HISTORY REPORT', { align: 'center' });
-    doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(`Status Logs - Generated On: ${new Date().toLocaleString('en-IN')}`, { align: 'center' });
+    doc.moveDown(0.2);
+    doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(`Status Logs Generated On: ${new Date().toLocaleString('en-IN')}`, { align: 'center' });
+    doc.text(`Total Activity Logs Count: ${logs.length}`, { align: 'center' });
     doc.moveDown(2);
 
     // --- Table Headers ---
     const tableTop = doc.y;
-    const colWidths = [25, 120, 110, 80, 100, 80]; 
-    const headers = ['#', 'Student Name', 'Roll No', 'Hostel', 'Action', 'Log (Time)'];
+    const colWidths = [25, 120, 100, 90, 90, 85]; // Total 510
+    const headers = ['#', 'Student Name', 'Roll No', 'Hostel', 'Action Status', 'Sync Time'];
 
-    doc.rect(40, tableTop - 5, 515, 22).fill('#3b82f6');
+    doc.rect(40, tableTop - 5, 510, 22).fill('#3b82f6');
     doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold');
 
     let x = 40;
@@ -48,39 +59,46 @@ export async function GET(request) {
       x += colWidths[i];
     });
 
-    doc.moveDown(1);
+    doc.moveDown(1.2);
     doc.font('Helvetica').fontSize(9).fillColor('#0f172a');
 
-    // --- Logs ---
-    logs.forEach((log, index) => {
-      if (doc.y > 740) {
-        doc.addPage();
-        doc.fillColor('#3b82f6').rect(40, doc.y - 5, 515, 20).fill();
-        doc.fillColor('#ffffff').font('Helvetica-Bold');
-        let hx = 40;
-        headers.forEach((h, i) => {
-          doc.text(h, hx + 4, doc.y, { width: colWidths[i], align: i === 0 || i === 4 ? 'center' : 'left' });
-          hx += colWidths[i];
+    if (logs.length === 0) {
+      doc.fillColor('#64748b').text('No student movement activity has been logged yet.', 40, doc.y, { align: 'center', width: 510 });
+    } else {
+      // --- Log Rows ---
+      logs.forEach((log, index) => {
+        // Auto Page Break Logic
+        if (doc.y > 740) {
+          doc.addPage();
+          doc.fillColor('#3b82f6').rect(40, doc.y - 5, 510, 20).fill();
+          doc.fillColor('#ffffff').font('Helvetica-Bold');
+          let hx = 40;
+          headers.forEach((h, i) => {
+            doc.text(h, hx + 4, doc.y, { width: colWidths[i], align: i === 0 || i === 4 ? 'center' : 'left' });
+            hx += colWidths[i];
+          });
+          doc.moveDown(1).fillColor('#0f172a').font('Helvetica');
+        }
+
+        const y = doc.y;
+        if (index % 2 === 0) {
+          doc.rect(40, y - 2, 510, 18).fill('#f8fafc');
+        }
+        doc.fillColor('#0f172a');
+
+        const actionText = log.action === 'in' ? 'ENTRY (Inside)' : 'EXIT (Outside)';
+        const timestampText = new Date(log.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const values = [(index + 1).toString(), log.student_name, log.roll_number || '-', log.hostel || '-', actionText, timestampText];
+
+        let cx = 40;
+        values.forEach((v, i) => {
+          doc.text(v || '-', cx + 4, y, { width: colWidths[i], align: i === 0 || i === 4 ? 'center' : 'left', lineBreak: false });
+          cx += colWidths[i];
         });
-        doc.moveDown(1).fillColor('#0f172a').font('Helvetica');
-      }
 
-      const y = doc.y;
-      if (index % 2 === 0) doc.rect(40, y - 2, 515, 18).fill('#f8fafc');
-      doc.fillColor('#0f172a');
-
-      const actionText = log.action === 'in' ? 'ENTRY (Inside)' : 'EXIT (Outside)';
-      const timestampText = new Date(log.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-      const values = [(index + 1).toString(), log.student_name, log.roll_number || '-', log.hostel || '-', actionText, timestampText];
-
-      let cx = 40;
-      values.forEach((v, i) => {
-        doc.text(v, cx + 4, y, { width: colWidths[i], align: i === 0 || i === 4 ? 'center' : 'left' });
-        cx += colWidths[i];
+        doc.moveDown(0.7);
       });
-
-      doc.moveDown(0.7);
-    });
+    }
 
     doc.end();
     const pdfBuffer = await pdfPromise;
@@ -93,7 +111,10 @@ export async function GET(request) {
       },
     });
   } catch (err) {
-    console.error('PDF Status report critical failure:', err);
-    return new Response(JSON.stringify({ error: 'Failed to generate report.' }), { status: 500 });
+    console.error('Status PDF critically failed:', err);
+    return new Response(JSON.stringify({ error: 'Failed to generate report. Ensure some activity has been logged first.' }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
