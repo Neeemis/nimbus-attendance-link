@@ -64,7 +64,7 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <div className="navbar-inner">
+      <div className={`navbar-inner ${mobileOpen ? 'mobile-active' : ''}`}>
         <div className="navbar-brand">
           <div className="brand-logo-container">
             <img src="/logo.svg" alt="Nimbus" className="brand-logo" />

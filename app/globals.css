@@ -372,19 +372,42 @@ label {
 .mobile-toggle {
   display: none;
   flex-direction: column;
-  gap: 5px;
-  background: none;
-  border: none;
+  justify-content: space-between;
+  width: 32px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
+  border-radius: 6px;
+  z-index: 3000;
+  transition: var(--transition);
+}
+
+.mobile-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-primary);
 }
 
 .mobile-toggle span {
-  width: 22px;
-  height: 2px;
-  background: var(--text-secondary);
-  border-radius: 2px;
-  transition: all var(--transition);
+  width: 100%;
+  height: 1.5px;
+  background: #fff;
+  border-radius: 4px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-inner.mobile-active .mobile-toggle span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.navbar-inner.mobile-active .mobile-toggle span:nth-child(2) {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.navbar-inner.mobile-active .mobile-toggle span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 /* =============================================
