@@ -1081,6 +1081,8 @@ label {
     justify-content: space-between;
   }
 
+  .desktop-only { display: none !important; }
+
   .mobile-toggle { 
     display: flex; 
     order: 3; 
@@ -1093,7 +1095,12 @@ label {
     justify-content: center;
   }
 
-  .navbar-brand { order: 1; z-index: 100003; }
+  .navbar-brand { 
+    order: 1; 
+    z-index: 100003; 
+    transform: scale(0.85); /* Shrink logo/brand on mobile */
+    transform-origin: left center;
+  }
 
   .navbar-links {
     display: none;
