@@ -28,6 +28,7 @@ export async function GET(request) {
       LIMIT 1500
     `;
 
+    const nowTime = new Date().toLocaleString('en-IN');
     // Create PDF
     const doc = new PDFDocument({ margin: 40, size: 'A4' });
     const chunks = [];
@@ -35,19 +36,22 @@ export async function GET(request) {
     
     const pdfPromise = new Promise((resolve, reject) => {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
-      doc.on('error', reject);
+      doc.on('error', (err) => {
+        console.error('PDFKit error:', err);
+        reject(err);
+      });
     });
 
     // --- Header Section ---
     doc.fontSize(22).font('Helvetica-Bold').fillColor('#1e3a8a').text('CAMPUS STATUS HISTORY REPORT', { align: 'center' });
     doc.moveDown(0.2);
-    doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(`Status Logs Generated On: ${new Date().toLocaleString('en-IN')}`, { align: 'center' });
+    doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(`Status Logs Generated On: ${nowTime}`, { align: 'center' });
     doc.text(`Total Activity Logs Count: ${logs.length}`, { align: 'center' });
     doc.moveDown(2);
 
     // --- Table Headers ---
     const tableTop = doc.y;
-    const colWidths = [25, 120, 100, 90, 90, 85]; // Total 510
+    const colWidths = [25, 120, 100, 90, 90, 85]; 
     const headers = ['#', 'Student Name', 'Roll No', 'Hostel', 'Action Status', 'Sync Time'];
 
     doc.rect(40, tableTop - 5, 510, 22).fill('#3b82f6');
@@ -59,44 +63,43 @@ export async function GET(request) {
       x += colWidths[i];
     });
 
-    doc.moveDown(1.2);
+    doc.moveDown(1.3);
     doc.font('Helvetica').fontSize(9).fillColor('#0f172a');
 
     if (logs.length === 0) {
       doc.fillColor('#64748b').text('No student movement activity has been logged yet.', 40, doc.y, { align: 'center', width: 510 });
     } else {
-      // --- Log Rows ---
       logs.forEach((log, index) => {
-        // Auto Page Break Logic
-        if (doc.y > 740) {
-          doc.addPage();
-          doc.fillColor('#3b82f6').rect(40, doc.y - 5, 510, 20).fill();
-          doc.fillColor('#ffffff').font('Helvetica-Bold');
-          let hx = 40;
-          headers.forEach((h, i) => {
-            doc.text(h, hx + 4, doc.y, { width: colWidths[i], align: i === 0 || i === 4 ? 'center' : 'left' });
-            hx += colWidths[i];
+        try {
+          if (doc.y > 740) {
+            doc.addPage();
+            doc.fillColor('#3b82f6').rect(40, doc.y - 5, 510, 20).fill();
+            doc.fillColor('#ffffff').font('Helvetica-Bold');
+            let hx = 40;
+            headers.forEach((h, i) => {
+              doc.text(h, hx + 4, doc.y, { width: colWidths[i], align: i === 0 || i === 4 ? 'center' : 'left' });
+              hx += colWidths[i];
+            });
+            doc.moveDown(1).fillColor('#0f172a').font('Helvetica');
+          }
+
+          const y = doc.y;
+          if (index % 2 === 0) doc.rect(40, y - 2, 510, 18).fill('#f8fafc');
+          doc.fillColor('#0f172a');
+
+          const actionText = log.action === 'in' ? 'ENTRY (Inside)' : (log.action === 'out' ? 'EXIT (Outside)' : 'Unknown');
+          const timestampText = log.timestamp ? new Date(log.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+          const values = [(index + 1).toString(), log.student_name, log.roll_number || '-', log.hostel || '-', actionText, timestampText];
+
+          let cx = 40;
+          values.forEach((v, i) => {
+            doc.text(v || '-', cx + 4, y, { width: colWidths[i], align: i === 0 || i === 4 ? 'center' : 'left', lineBreak: false });
+            cx += colWidths[i];
           });
-          doc.moveDown(1).fillColor('#0f172a').font('Helvetica');
+          doc.moveDown(0.7);
+        } catch (rowErr) {
+          console.error(`Row ${index} render error:`, rowErr);
         }
-
-        const y = doc.y;
-        if (index % 2 === 0) {
-          doc.rect(40, y - 2, 510, 18).fill('#f8fafc');
-        }
-        doc.fillColor('#0f172a');
-
-        const actionText = log.action === 'in' ? 'ENTRY (Inside)' : 'EXIT (Outside)';
-        const timestampText = new Date(log.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const values = [(index + 1).toString(), log.student_name, log.roll_number || '-', log.hostel || '-', actionText, timestampText];
-
-        let cx = 40;
-        values.forEach((v, i) => {
-          doc.text(v || '-', cx + 4, y, { width: colWidths[i], align: i === 0 || i === 4 ? 'center' : 'left', lineBreak: false });
-          cx += colWidths[i];
-        });
-
-        doc.moveDown(0.7);
       });
     }
 
@@ -107,12 +110,17 @@ export async function GET(request) {
       status: 200,
       headers: { 
         'Content-Type': 'application/pdf', 
-        'Content-Disposition': 'attachment; filename="campus_status_report.pdf"' 
+        'Content-Disposition': 'attachment; filename="campus_status_report.pdf"',
+        'Cache-Control': 'no-store, must-revalidate'
       },
     });
   } catch (err) {
-    console.error('Status PDF critically failed:', err);
-    return new Response(JSON.stringify({ error: 'Failed to generate report. Ensure some activity has been logged first.' }), { 
+    console.error('FINAL PDF CATCH:', err);
+    return new Response(JSON.stringify({ 
+      error: 'PDF Failure', 
+      details: err.message,
+      hint: 'Ensure some status activity has been logged first by marking a student IN/OUT.'
+    }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
