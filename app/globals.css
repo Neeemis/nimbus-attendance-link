@@ -1038,15 +1038,19 @@ label {
    ============================================= */
 @media (max-width: 768px) {
   .main-content {
-    padding: 16px 12px;
-    margin-top: calc(var(--navbar-height) - 10px);
+    padding: 16px 16px;
+    margin-top: calc(var(--navbar-height) + 10px); /* Increased spacing */
   }
 
   .page-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 20px;
+    align-items: stretch; /* Button full width on mobile */
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .page-header .btn {
+    width: 100%; /* Force button to take own line and full width */
   }
 
   .page-header h1 {
