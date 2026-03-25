@@ -68,8 +68,9 @@ export default function DisciplinePage() {
     if (/ambika|ambi/i.test(h)) return 'Ambika Girls Hostel';
     if (/satpura/i.test(h)) return 'Satpura Girls Hostel';
     if (/parvati/i.test(h)) return 'Parvati Girls Hostel';
+    if (/mani|mahesh/i.test(h)) return 'Manimahesh Hostel';
     return h;
-  }).filter(h => h && h.toLowerCase().includes('girls')))].sort();
+  }).filter(h => h))].sort();
 
   return (
     <PageWrapper>
@@ -77,28 +78,39 @@ export default function DisciplinePage() {
         <div className="page-header">
           <div>
             <h1>Campus Status Tracker</h1>
-            <p className="subtitle">Track female students leaving and entering the campus</p>
+            <p className="subtitle">Track students leaving and entering the campus</p>
           </div>
+          {user.email && ( // Assuming any logged-in user on this page can download, or add specific role check if needed
+            <button 
+              className="btn btn-accent" 
+              onClick={() => {
+                const token = localStorage.getItem('token');
+                window.open(`/api/discipline/report/pdf?token=${token}`, '_blank');
+              }}
+            >
+              📄 Export Status Report
+            </button>
+          )}
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
+{error && <div className="alert alert-error">{error}</div>}
 
-        <div className="attendance-summary glass-card">
-          <div className="summary-item present">
-            <span className="summary-count">{inCampusCount}</span>
-            <span className="summary-label">In Campus</span>
-          </div>
-          <div className="summary-divider"></div>
-          <div className="summary-item absent">
-            <span className="summary-count">{outCampusCount}</span>
-            <span className="summary-label">Out Campus</span>
-          </div>
-          <div className="summary-divider"></div>
-          <div className="summary-item total">
-            <span className="summary-count">{totalGirls}</span>
-            <span className="summary-label">Total Girls</span>
-          </div>
-        </div>
+<div className="attendance-summary glass-card">
+  <div className="summary-item present">
+    <span className="summary-count">{inCampusCount}</span>
+    <span className="summary-label">In Campus</span>
+  </div>
+  <div className="summary-divider"></div>
+  <div className="summary-item absent">
+    <span className="summary-count">{outCampusCount}</span>
+    <span className="summary-label">Out Campus</span>
+  </div>
+  <div className="summary-divider"></div>
+  <div className="summary-item total">
+    <span className="summary-count">{totalGirls}</span>
+    <span className="summary-label">Total Students</span>
+  </div>
+</div>
 
         {loading ? (
           <div className="loading-state"><span className="spinner"></span> Loading data...</div>
