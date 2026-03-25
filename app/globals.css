@@ -463,9 +463,45 @@ label {
   margin-bottom: 32px;
 }
 
-.login-logo {
-  font-size: 3rem;
-  margin-bottom: 12px;
+.brand-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 6px;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+}
+
+.brand-logo {
+  width: 100%;
+  height: 100%;
+  color: var(--accent-primary);
+  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.5));
+}
+
+.login-logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  margin: 0 auto 24px;
+  padding: 12px;
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+}
+
+.login-logo-img {
+  width: 100%;
+  height: 100%;
+  color: var(--accent-primary);
+  filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
 }
 
 .login-header h1 {
@@ -979,72 +1015,150 @@ label {
    ============================================= */
 @media (max-width: 768px) {
   .main-content {
-    padding: 20px 16px;
+    padding: 16px 12px;
+    margin-top: calc(var(--navbar-height) - 10px);
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
   }
 
   .page-header h1 {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+
+  .page-header .subtitle {
+    font-size: 0.85rem;
   }
 
   /* Navbar mobile */
-  .mobile-toggle { display: flex; }
+  .navbar-inner {
+    padding: 0 16px;
+    justify-content: space-between;
+  }
+
+  .mobile-toggle { display: flex; order: 3; }
+  .navbar-brand { order: 1; }
+  .navbar-user.desktop-only { display: none; }
 
   .navbar-links {
     position: fixed;
     top: var(--navbar-height);
     left: 0; right: 0;
-    background: rgba(15, 15, 26, 0.95);
-    backdrop-filter: blur(20px);
+    bottom: 0;
+    background: rgba(10, 10, 20, 0.98);
+    backdrop-filter: blur(25px);
     flex-direction: column;
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-    transform: translateY(-100%);
+    padding: 24px;
+    gap: 12px;
+    border-top: 1px solid var(--border);
+    transform: translateX(100%);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2000;
   }
 
   .navbar-links.open {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
     pointer-events: all;
   }
 
-  .navbar-user {
-    margin-left: auto;
+  .nav-link {
+    font-size: 1.1rem;
+    padding: 14px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    width: 100%;
   }
 
-  .user-name { display: none; }
+  .mobile-user-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
 
   /* Dashboard */
   .dashboard-grid, .dashboard-grid.admin-grid {
     grid-template-columns: 1fr !important;
+    gap: 16px;
   }
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
+
+  .stat-card {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .stat-icon { font-size: 1.5rem; }
+  .stat-value { font-size: 1.3rem; }
+  .stat-label { font-size: 0.75rem; }
 
   /* Attendance */
   .attendance-controls {
     flex-direction: column;
     align-items: stretch;
+    gap: 16px;
   }
 
   .date-picker-group input[type="date"] {
     width: 100%;
   }
 
-  .attendance-row {
-    padding: 12px 14px;
-    gap: 10px;
+  .bulk-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
-  .stat-value { font-size: 1.4rem; }
+  .attendance-row {
+    padding: 12px;
+    gap: 8px;
+    border-radius: var(--radius-sm);
+  }
 
-  /* Students */
-  .add-student-row {
+  .row-name {
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-status {
+    display: none; /* Hide status text on small screens, toggle is enough */
+  }
+
+  .toggle-switch {
+    width: 42px;
+    height: 22px;
+  }
+
+  .toggle-knob {
+    width: 16px;
+    height: 16px;
+  }
+
+  .toggle-switch.on .toggle-knob { left: 23px; }
+
+  /* Calendar sizing */
+  .fc .fc-toolbar {
     flex-direction: column;
+    gap: 10px;
+  }
+  
+  .calendar-card {
+    padding: 16px;
+    overflow-x: auto;
   }
 }
 

@@ -55,8 +55,14 @@ export default function DisciplinePage() {
   const inCampusCount = filteredStudents.filter((s) => s.campus_status === 'in').length;
   const outCampusCount = totalGirls - inCampusCount;
 
-  // Extract unique hostels for dropdown and guarantee Parvati is included
-  const uniqueHostels = [...new Set([...students.map(s => s.hostel).filter(h => h && h.toLowerCase().includes('girls')), 'Parvati Girls Hostel'])].sort();
+  // Extract and normalize unique hostels for dropdown
+  const uniqueHostels = [...new Set(students.map(s => {
+    let h = s.hostel || '';
+    if (/ambika|ambi/i.test(h)) return 'Ambika Girls Hostel';
+    if (/satpura/i.test(h)) return 'Satpura Girls Hostel';
+    if (/parvati/i.test(h)) return 'Parvati Girls Hostel';
+    return h;
+  }).filter(h => h && h.toLowerCase().includes('girls')))].sort();
 
   return (
     <PageWrapper>

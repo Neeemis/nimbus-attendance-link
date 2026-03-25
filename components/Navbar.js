@@ -66,7 +66,9 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-inner">
         <div className="navbar-brand">
-          <div className="brand-icon">☁️</div>
+          <div className="brand-logo-container">
+            <img src="/logo.svg" alt="Nimbus" className="brand-logo" />
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px' }}>
             <span style={{ fontSize: '1.4rem', fontWeight: '800', letterSpacing: '1px', color: '#fff' }}>NAP</span>
             <span style={{ fontSize: '0.65rem', color: '#94a3b8', letterSpacing: '0.3px', fontWeight: '500' }}>NIMBUS ATTENDANCE PORTAL</span>
@@ -101,9 +103,19 @@ export default function Navbar() {
               <span className="nav-icon">🛡️</span> Status
             </Link>
           )}
+
+          {/* 📱 Mobile User Actions */}
+          <div className="mobile-user-actions">
+            <button className="btn btn-outline btn-full" onClick={() => { setShowPasswordModal(true); setMobileOpen(false); }}>
+              🔑 Change Password
+            </button>
+            <button className="btn btn-logout btn-full" onClick={handleLogout} style={{ marginTop: '4px' }}>
+              Logout
+            </button>
+          </div>
         </div>
 
-        <div className="navbar-user">
+        <div className="navbar-user desktop-only">
           <span className="user-name">{user.name || 'User'} {user.role === 'admin' && '(Admin)'}</span>
           <button className="btn-logout" onClick={() => setShowPasswordModal(true)} style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.2)', padding: '6px 12px', fontSize: '0.75rem', marginRight: '6px' }}>🔑 Change Pass</button>
           <button className="btn-logout" onClick={handleLogout}>Logout</button>

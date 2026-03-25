@@ -47,7 +47,9 @@ export default function LoginPage() {
       </div>
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo">☁️</div>
+          <div className="login-logo-container">
+            <img src="/logo.svg" alt="Nimbus Logo" className="login-logo-img" />
+          </div>
           <h1>NIMBUS ATTENDANCE</h1>
           <p>Portal Access</p>
         </div>
