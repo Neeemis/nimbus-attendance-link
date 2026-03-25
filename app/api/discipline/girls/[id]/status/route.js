@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
 
+import { getSyncedTime } from '@/lib/time';
+
 export async function PUT(request, { params }) {
   const user = verifyAuth(request);
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
@@ -23,7 +25,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
     }
 
-    const now = new Date();
+    const now = await getSyncedTime();
     const [student] = await sql.begin(async (tx) => {
       const [s] = await tx`
         UPDATE students 
