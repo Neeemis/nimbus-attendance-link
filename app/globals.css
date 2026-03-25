@@ -3,6 +3,10 @@
 /* =============================================
    DESIGN TOKENS
    ============================================= */
+.mobile-user-actions, .mobile-only {
+  display: none !important;
+}
+
 :root {
   /* Colors - Deep blue/violet palette */
   --bg-primary: #0f0f1a;
@@ -1141,7 +1145,7 @@ label {
   }
 
   .mobile-user-actions {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     gap: 12px;
     margin-top: auto;
