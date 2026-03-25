@@ -10,6 +10,13 @@ export default function DisciplinePage() {
   const [filterHostel, setFilterHostel] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [user, setUser] = useState({});
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUser(JSON.parse(localStorage.getItem('user') || '{}'));
+    }
+  }, []);
 
   const fetchGirls = async () => {
     setLoading(true);
@@ -146,12 +153,14 @@ export default function DisciplinePage() {
                         <span className={`row-status ${isIn ? 'present' : 'absent'}`} style={{ minWidth: '80px', textAlign: 'center' }}>
                           {isIn ? 'Inside' : 'Outside'}
                         </span>
-                        <button 
-                          className={`btn btn-sm ${isIn ? 'btn-outline' : 'btn-primary'}`} 
-                          onClick={() => handleToggleStatus(student.id, student.campus_status)}
-                        >
-                          Mark {isIn ? 'OUT' : 'IN'}
-                        </button>
+                        {user.email !== 'faculty@nimbus.com' && (
+                          <button 
+                            className={`btn btn-sm ${isIn ? 'btn-outline' : 'btn-primary'}`} 
+                            onClick={() => handleToggleStatus(student.id, student.campus_status)}
+                          >
+                            Mark {isIn ? 'OUT' : 'IN'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

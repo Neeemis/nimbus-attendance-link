@@ -13,9 +13,13 @@ export default function UserManagementPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [user, setUser] = useState({});
 
   useEffect(() => {
     fetchUsers();
+    if (typeof window !== 'undefined') {
+      setUser(JSON.parse(localStorage.getItem('user') || '{}'));
+    }
   }, []);
 
   const fetchUsers = async () => {
@@ -101,6 +105,12 @@ export default function UserManagementPage() {
     window.location.href = '/'; 
   };
 
+  const handleDownloadPDF = (u) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    window.location.href = `/api/report/pdf?token=${token}&userId=${u.id}`;
+  };
+
   return (
     <PageWrapper>
       <div className="users-page">
@@ -109,9 +119,11 @@ export default function UserManagementPage() {
             <h1>User Management</h1>
             <p className="subtitle">Manage instructor accounts (Admin only)</p>
           </div>
-          <button className="btn btn-primary" onClick={() => handleOpenForm()}>
-            ➕ Create New User
-          </button>
+          {user.email !== 'faculty@nimbus.com' && (
+            <button className="btn btn-primary" onClick={() => handleOpenForm()}>
+              ➕ Create New User
+            </button>
+          )}
         </div>
 
         {message.text && (
@@ -188,9 +200,14 @@ export default function UserManagementPage() {
                     <td style={{ padding: '16px 24px', color: 'var(--text-secondary)' }}>{u.email}</td>
                     <td style={{ padding: '16px 24px' }}>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button className="btn-icon" onClick={() => handleViewData(u)} title="View/Edit Data" style={{ color: 'var(--accent)' }}>👁️</button>
-                        <button className="btn-icon btn-edit" onClick={() => handleOpenForm(u)} title="Edit">✏️</button>
-                        <button className="btn-icon btn-delete" onClick={() => handleDelete(u.id, u.name)} title="Delete">🗑️</button>
+                        <button className="btn-icon" onClick={() => handleDownloadPDF(u)} title="Download Instructor PDF Report" style={{ color: '#ef4444', fontSize: '1.1rem' }}>📄</button>
+                        <button className="btn-icon" onClick={() => handleViewData(u)} title="View/Edit Attendance Data" style={{ color: 'var(--accent)' }}>👁️</button>
+                        {user.email !== 'faculty@nimbus.com' && (
+                          <>
+                            <button className="btn-icon btn-edit" onClick={() => handleOpenForm(u)} title="Edit">✏️</button>
+                            <button className="btn-icon btn-delete" onClick={() => handleDelete(u.id, u.name)} title="Delete">🗑️</button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

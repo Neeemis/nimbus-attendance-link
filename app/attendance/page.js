@@ -39,7 +39,7 @@ function AttendanceContent() {
     try {
       const { data } = await api.get(`/attendance?date=${d}`);
       const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
-      setLocked(user.role === 'admin' ? false : data.locked);
+      setLocked((user.role === 'admin' && user.email !== 'faculty@nimbus.com') ? false : data.locked || user.email === 'faculty@nimbus.com');
       const map = {};
       data.records.forEach((r) => {
         map[r.student_id] = r.status === 'present';
