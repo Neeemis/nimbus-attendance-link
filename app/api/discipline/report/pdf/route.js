@@ -28,7 +28,7 @@ export async function GET(request) {
       LIMIT 1500
     `;
 
-    const nowTime = new Date().toLocaleString('en-IN');
+    const nowTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     // Create PDF
     const doc = new PDFDocument({ margin: 40, size: 'A4' });
     const chunks = [];
@@ -45,14 +45,14 @@ export async function GET(request) {
     // --- Header Section ---
     doc.fontSize(22).font('Helvetica-Bold').fillColor('#1e3a8a').text('CAMPUS STATUS HISTORY REPORT', { align: 'center' });
     doc.moveDown(0.2);
-    doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(`Status Logs Generated On: ${nowTime}`, { align: 'center' });
+    doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(`Standard IST Generated On: ${nowTime}`, { align: 'center' });
     doc.text(`Total Activity Logs Count: ${logs.length}`, { align: 'center' });
     doc.moveDown(2);
 
     // --- Table Headers ---
     const tableTop = doc.y;
     const colWidths = [25, 120, 100, 90, 90, 85]; 
-    const headers = ['#', 'Student Name', 'Roll No', 'Hostel', 'Action Status', 'Sync Time'];
+    const headers = ['#', 'Student Name', 'Roll No', 'Hostel', 'Action Status', 'Sync Time (IST)'];
 
     doc.rect(40, tableTop - 5, 510, 22).fill('#3b82f6');
     doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold');
@@ -88,7 +88,9 @@ export async function GET(request) {
           doc.fillColor('#0f172a');
 
           const actionText = log.action === 'in' ? 'ENTRY (Inside)' : (log.action === 'out' ? 'EXIT (Outside)' : 'Unknown');
-          const timestampText = log.timestamp ? new Date(log.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+          const timestampText = log.timestamp 
+            ? new Date(log.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Kolkata' }) 
+            : '-';
           const values = [(index + 1).toString(), log.student_name, log.roll_number || '-', log.hostel || '-', actionText, timestampText];
 
           let cx = 40;
