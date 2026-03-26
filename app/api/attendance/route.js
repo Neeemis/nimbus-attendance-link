@@ -33,16 +33,22 @@ export async function POST(request) {
         AND student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId})
       `;
 
-      // Step 2: Batch insert the new records
-      const insertRows = records
-        .filter(r => validStudentIds.has(r.studentId))
-        .map(r => ({
-          student_id: r.studentId,
-          date: date,
-          status: r.status === 'present' ? 'present' : 'absent'
-        }));
+      // Step 2: Batch insert the new records (Deduplicated to prevent PK violations in same batch)
+      const uniqueRecordsMap = new Map();
+      records.forEach(r => {
+        if (validStudentIds.has(r.studentId)) {
+          uniqueRecordsMap.set(r.studentId, {
+            student_id: r.studentId,
+            date: date,
+            status: r.status === 'present' ? 'present' : 'absent'
+          });
+        }
+      });
+
+      const insertRows = Array.from(uniqueRecordsMap.values());
 
       if (insertRows.length > 0) {
+        console.log(`🚀 Inserting ${insertRows.length} unique records for ${date}`);
         await sql`INSERT INTO attendance ${sql(insertRows, 'student_id', 'date', 'status')}`;
       }
     });
