@@ -75,16 +75,31 @@ export async function GET(request) {
         ORDER BY s.roll_number ASC, s.name ASC
       `;
     } else {
-      // SUPERVISOR VIEW: Only their students
+      // SUPERVISOR VIEW
       const targetUserId = getTargetUserId(user, searchParams);
-      rows = await sql`
-        SELECT s.id, s.name, s.roll_number,
-               CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
-        FROM students s
-        LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
-        WHERE s.user_id = ${targetUserId}
-        ORDER BY s.roll_number ASC, s.name ASC
-      `;
+      
+      if (user.email === 'discipline@nimbus.com') {
+        // Discipline officer sees Females + those assigned to them
+        rows = await sql`
+          SELECT s.id, s.name, s.roll_number,
+                 CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
+          FROM students s
+          LEFT JOIN users u ON s.user_id = u.id
+          LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
+          WHERE s.gender = 'Female' OR u.email = 'discipline@nimbus.com'
+          ORDER BY s.roll_number ASC, s.name ASC
+        `;
+      } else {
+        // Regular staff only see their own assigned students
+        rows = await sql`
+          SELECT s.id, s.name, s.roll_number,
+                 CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
+          FROM students s
+          LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
+          WHERE s.user_id = ${targetUserId}
+          ORDER BY s.roll_number ASC, s.name ASC
+        `;
+      }
     }
 
     return NextResponse.json(rows);
