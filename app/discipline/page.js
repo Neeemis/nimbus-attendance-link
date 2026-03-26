@@ -99,7 +99,7 @@ export default function DisciplinePage() {
       <div className="students-page fade-in">
         <div className="page-header sticky-header">
           <div>
-            <h1>🛡️ Discipline & Duty Roaster</h1>
+            <h1>🛡️ Campus Status Tracker</h1>
             <p className="subtitle">Manage student status and duty roaster for today</p>
           </div>
           <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
