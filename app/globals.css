@@ -1043,18 +1043,18 @@ label {
 @media (max-width: 768px) {
   .main-content {
     padding: 16px 16px;
-    margin-top: calc(var(--navbar-height) + 10px); /* Increased spacing */
+    margin-top: calc(var(--navbar-height) + 10px);
   }
 
   .page-header {
     flex-direction: column;
-    align-items: stretch; /* Button full width on mobile */
+    align-items: stretch;
     gap: 16px;
     margin-bottom: 32px;
   }
 
   .page-header .btn {
-    width: 100%; /* Force button to take own line and full width */
+    width: 100%;
   }
 
   .page-header h1 {
@@ -1062,10 +1062,52 @@ label {
     line-height: 1.2;
   }
 
-  .page-header .subtitle {
-    font-size: 0.85rem;
+  /* 📱 Student Add Form Mobile */
+  .add-student-row {
+    flex-direction: column;
+    gap: 12px;
   }
 
+  .add-student-row input, 
+  .add-student-row select, 
+  .add-student-row button {
+    width: 100% !important;
+    min-height: 52px;
+    font-size: 1.05rem !important;
+    padding: 14px 18px !important;
+    border-radius: 12px !important;
+  }
+
+  .add-student-row input:focus {
+    transform: scale(1.04);
+    z-index: 100 !important;
+    background: var(--bg-card-hover) !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+
+  /* 📱 Logout Button & User Actions Mobile */
+  .mobile-user-actions {
+    display: flex !important;
+    margin-top: auto;
+    padding: 24px 0 12px 0 !important;
+    border-top: 1px solid var(--border);
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-full {
+    width: 100% !important;
+    padding: 16px !important;
+    font-size: 1rem !important;
+    justify-content: center;
+    border-radius: 14px !important;
+  }
+
+  .btn-logout.btn-full {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  }
 }
 
 .navbar {
