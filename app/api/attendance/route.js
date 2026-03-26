@@ -23,43 +23,37 @@ export async function POST(request) {
     const userStudents = await sql`SELECT id FROM students WHERE user_id = ${targetUserId}`;
     const validStudentIds = new Set(userStudents.map(s => s.id));
 
-    const [existingCheck] = await sql`
-      SELECT a.id FROM attendance a
-      JOIN students s ON a.student_id = s.id
-      WHERE s.user_id = ${targetUserId} AND a.date = ${date}::date LIMIT 1
+    // CHECK FOR PRE-EXISTING RECORDS FOR THE USER'S STUDENTS
+    const existingCheck = await sql`
+      SELECT a.id FROM attendance a 
+      WHERE a.date = ${date}::date 
+      AND a.student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId}) 
+      LIMIT 1
     `;
 
-    if (existingCheck && user.role !== 'admin') {
+    // 🔒 NON-ADMINS are blocked from re-submitting once AND ONLY IF records already exist.
+    if (existingCheck.length > 0 && user.role !== 'admin') {
       return NextResponse.json({ error: 'Attendance for this date has already been submitted and is locked.' }, { status: 403 });
     }
 
-    try {
-      await sql.begin(async sql => {
-        if (user.role === 'admin' && existingCheck) {
-          await sql`DELETE FROM attendance WHERE date = ${date}::date AND student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId})`;
-        }
-        for (const record of records) {
-          if (!validStudentIds.has(record.studentId)) {
-            throw new Error(`Student ID ${record.studentId} does not belong to you.`);
-          }
-          const status = record.status === 'present' ? 'present' : 'absent';
-          await sql`INSERT INTO attendance (student_id, date, status) VALUES (${record.studentId}, ${date}::date, ${status})`;
-        }
-      });
-    } catch (txErr) {
-      if (txErr.message.includes('does not belong')) {
-        return NextResponse.json({ error: txErr.message }, { status: 400 });
+    // 🚀 ATOMIC UPSERT
+    await sql.begin(async sql => {
+      for (const record of records) {
+        if (!validStudentIds.has(record.studentId)) continue; 
+        
+        await sql`
+          INSERT INTO attendance (student_id, date, status)
+          VALUES (${record.studentId}, ${date}::date, ${record.status === 'present' ? 'present' : 'absent'})
+          ON CONFLICT (student_id, date) 
+          DO UPDATE SET status = EXCLUDED.status
+        `;
       }
-      throw txErr;
-    }
+    });
 
     return NextResponse.json({ message: 'Attendance submitted successfully.' }, { status: 201 });
   } catch (err) {
     console.error('Submit attendance error:', err);
-    if (err.code === '23505') {
-      return NextResponse.json({ error: 'Duplicate attendance entry detected. Attendance is locked.' }, { status: 403 });
-    }
-    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to submit: ' + err.message }, { status: 500 });
   }
 }
 
