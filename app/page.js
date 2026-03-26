@@ -120,7 +120,7 @@ export default function DashboardPage() {
 
   const calendarEvents = dates.map((d) => ({
     title: `${d.present_count}/${d.total_count} Present`,
-    date: d.date.split('T')[0],
+    date: d.date || (typeof d.date === 'string' && d.date.split('T')[0]) || '',
     backgroundColor: (d.present_count / d.total_count) >= 0.75 ? '#22c55e' : (d.present_count / d.total_count) >= 0.5 ? '#f59e0b' : '#ef4444',
     borderColor: 'transparent',
     textColor: '#fff',

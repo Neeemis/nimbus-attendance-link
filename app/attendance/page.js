@@ -108,13 +108,14 @@ function AttendanceContent() {
 
       <div className="attendance-controls glass-card">
         <div className="date-picker-group">
-          <label htmlFor="att-date">📅 Select Date</label>
+          <label htmlFor="att-date">📅 Attendance for Today</label>
           <input
             id="att-date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
+            min={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
+            max={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
           />
         </div>
 
