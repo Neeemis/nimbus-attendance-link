@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import PageWrapper from '@/components/PageWrapper';
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [filterYear, setFilterYear] = useState('');
   const [users, setUsers] = useState([]);
   
+  const pathname = usePathname();
   const [user, setUser] = useState({});
   const [targetUser, setTargetUser] = useState(null);
 
@@ -47,10 +48,10 @@ export default function DashboardPage() {
     if (user.role === 'admin') {
       fetchUsers();
     }
-    // Clear out the day inspection panel when swapping users
+    // Clear out the day inspection panel when swapping users or returning home
     setSelectedDate(null);
     setDayRecords([]);
-  }, [targetUser, user.id]);
+  }, [targetUser, user.id, pathname]);
 
   const fetchUsers = async () => {
     try {

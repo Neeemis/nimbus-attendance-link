@@ -189,7 +189,7 @@ function AttendanceContent() {
                   ✅ Attendance Recorded
                 </button>
                 <p className="success-footer-msg mt-3">
-                  ✨ Attendance for this date has been successfully submitted and locked.
+                  Attendance submitted
                 </p>
               </div>
             ) : (

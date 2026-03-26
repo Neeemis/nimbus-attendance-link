@@ -17,7 +17,7 @@ export async function GET(request) {
         SELECT l.student_id, l.action, l.timestamp, s.name as student_name, s.roll_number, s.hostel
         FROM campus_status_logs l
         JOIN students s ON l.student_id = s.id
-        WHERE l.timestamp >= ${filterDate + ' 00:00:00'}
+        WHERE l.timestamp::date = ${filterDate}
         ORDER BY l.student_id, l.timestamp ASC
         LIMIT 2500
       `;
