@@ -12,7 +12,7 @@ export default function DutyRoasterPage() {
   const [dutySet, setDutySet] = useState(new Set());
 
   useEffect(() => {
-    fetchDutyList();
+    if (date) fetchDutyList();
   }, [date]);
 
   const fetchDutyList = async () => {
@@ -64,11 +64,9 @@ export default function DutyRoasterPage() {
               max={new Date().toISOString().split('T')[0]} 
             />
           </div>
-          <button className="btn btn-primary" onClick={saveDuty}>💾 Save Duty List</button>
-        </div>
-
-          <div className="bulk-actions" style={{ marginTop: '16px' }}>
-            <button className="btn btn-sm btn-outline" onClick={() => {
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn btn-primary" onClick={saveDuty}>💾 Save Duty List</button>
+            <button className="btn btn-outline" onClick={() => {
               const allIds = students.map(s => s.id);
               if (dutySet.size === students.length) setDutySet(new Set());
               else setDutySet(new Set(allIds));
@@ -83,38 +81,43 @@ export default function DutyRoasterPage() {
         )}
 
         {loading ? (
-          <div className="loading-state">Loading...</div>
+          <div className="loading-state">Loading students...</div>
         ) : (
           <div className="student-attendance-list">
             <div className="attendance-header" style={{ padding: '12px 20px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', fontSize: '0.8rem', borderBottom: '1px solid #eee' }}>
               <span style={{ width: '40px' }}>#</span>
-              <span style={{ width: '40px' }}>On Duty</span>
+              <span style={{ width: '40px' }}>Check</span>
               <span style={{ flex: 1 }}>Student Name & Roll No.</span>
+              <span>Status</span>
             </div>
-            {students.map((s, idx) => (
-              <div 
-                key={s.id} 
-                className={`attendance-row ${dutySet.has(s.id) ? 'marked-present' : ''}`}
-                onClick={() => toggleDuty(s.id)}
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                <span className="row-number">{idx + 1}</span>
-                <div style={{ width: '40px', display: 'flex', justifyContent: 'center' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={dutySet.has(s.id)} 
-                    onChange={() => {}} // Handle via row click
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
+            {students.length === 0 ? (
+              <p style={{ padding: '20px', textAlign: 'center' }}>No students found in your group.</p>
+            ) : (
+              students.map((s, idx) => (
+                <div 
+                  key={s.id} 
+                  className={`attendance-row ${dutySet.has(s.id) ? 'marked-present' : ''}`}
+                  onClick={() => toggleDuty(s.id)}
+                  style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                >
+                  <span className="row-number">{idx + 1}</span>
+                  <div style={{ width: '40px', display: 'flex', justifyContent: 'center' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={dutySet.has(s.id)} 
+                      readOnly
+                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                  </div>
+                  <span className="row-name" style={{ flex: 1, textAlign: 'left', fontWeight: 600 }}>
+                    {s.name} <span style={{ color: '#0056b3', marginLeft: '6px', fontSize: '0.9em' }}>[{s.roll_number}]</span>
+                  </span>
+                  <span className={`row-status ${dutySet.has(s.id) ? 'present' : ''}`}>
+                    {dutySet.has(s.id) ? 'ON DUTY' : '-'}
+                  </span>
                 </div>
-                <span className="row-name" style={{ flex: 1, textAlign: 'left', fontWeight: 600 }}>
-                  {s.name} <span style={{ color: '#0056b3', marginLeft: '6px', fontSize: '0.9em' }}>[{s.roll_number}]</span>
-                </span>
-                <span className={`row-status ${dutySet.has(s.id) ? 'present' : ''}`}>
-                  {dutySet.has(s.id) ? 'ON DUTY' : '-'}
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         )}
       </div>
