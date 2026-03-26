@@ -34,39 +34,28 @@ export default function DashboardPage() {
   const [user, setUser] = useState({});
   const [targetUser, setTargetUser] = useState(null);
 
+  const [dutyStudents, setDutyStudents] = useState([]);
+  const [dutyDate, setDutyDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }));
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setUser(JSON.parse(localStorage.getItem('user') || '{}'));
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      setUser(u);
       setTargetUser(JSON.parse(localStorage.getItem('targetUser') || 'null'));
     }
   }, []);
-
-  const [dutyStudents, setDutyStudents] = useState([]);
 
   useEffect(() => {
     if (!user.id) return;
     fetchStats();
     fetchDates();
-    fetchDuty();
+    fetchDuty(dutyDate);
     if (user.role === 'admin') {
       fetchUsers();
     }
     setSelectedDate(null);
     setDayRecords([]);
-  }, [targetUser, user.id, pathname]);
-
-  const fetchDuty = async () => {
-    try {
-      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-      // Fetch specifically for the public view (all on duty today)
-      // Since instructors only see THEIR students in my current API, 
-      // I'll update the API to allow a public view for duty.
-      const { data } = await api.get(`/duty?date=${today}&global=true`);
-      setDutyStudents(data.filter(s => s.on_duty));
-    } catch (err) {
-      console.error('Failed to load duty students:', err);
-    }
-  };
+  }, [targetUser, user.id, pathname, dutyDate]);
 
   const fetchUsers = async () => {
     try {
@@ -95,6 +84,15 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchDuty = async (d) => {
+    try {
+      const { data } = await api.get(`/duty?date=${d}&global=true`);
+      setDutyStudents(data.filter(s => s.on_duty));
+    } catch (err) {
+      console.error('Failed to fetch duty students:', err);
+    }
+  };
+
   const handleDateClick = async (info) => {
     const date = info.dateStr;
     setSelectedDate(date);
@@ -109,12 +107,8 @@ export default function DashboardPage() {
   const handleExportPDF = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
-    
     let url = `/api/report/pdf?token=${token}`;
-    if (targetUser && targetUser.id) {
-      url += `&userId=${targetUser.id}`;
-    }
-    
+    if (targetUser && targetUser.id) url += `&userId=${targetUser.id}`;
     window.location.href = url;
   };
 
@@ -135,13 +129,12 @@ export default function DashboardPage() {
 
   const calendarEvents = dates.map((d) => ({
     title: `${d.present_count}/${d.total_count} Present`,
-    date: d.date || (typeof d.date === 'string' && d.date.split('T')[0]) || '',
+    date: d.date ? new Date(d.date).toISOString().split('T')[0] : '',
     backgroundColor: (d.present_count / d.total_count) >= 0.75 ? '#22c55e' : (d.present_count / d.total_count) >= 0.5 ? '#f59e0b' : '#ef4444',
     borderColor: 'transparent',
     textColor: '#fff',
   }));
 
-  const totalAbsent = parseInt(stats.total_records) - parseInt(stats.total_present);
   const avgAttendance = stats.total_records > 0
     ? ((stats.total_present / stats.total_records) * 100).toFixed(1)
     : '0.0';
@@ -152,7 +145,7 @@ export default function DashboardPage() {
         <div className="page-header">
           <div>
             <h1>Welcome back, {targetUser ? `${targetUser.name} (Viewing as Admin)` : (user.name?.split(' - ')[0] || user.name || 'User')}</h1>
-            <p className="subtitle">Here&apos;s an overview of your attendance records</p>
+            <p className="subtitle">Here&apos;s an overview of campus operations</p>
           </div>
           {user.role === 'admin' && (
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -164,7 +157,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="stats-grid">
-          {/* ... existing cards ... */}
           <div className="stat-card stat-blue">
             <div className="stat-icon">👥</div>
             <div className="stat-info">
@@ -187,19 +179,34 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="stat-card stat-purple">
-            <div className="stat-icon">📝</div>
+            <div className="stat-icon">📋</div>
             <div className="stat-info">
               <span className="stat-value">{dutyStudents.length}</span>
-              <span className="stat-label">On Duty Today</span>
+              <span className="stat-label">On Duty ({dutyDate === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) ? 'Today' : 'Selected'})</span>
             </div>
           </div>
         </div>
 
-        {dutyStudents.length > 0 && (
-          <div className="duty-banner-card glass-card" style={{ marginBottom: '24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-            <h2 style={{ fontSize: '1.2rem', color: '#6366f1', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🛡️ Students On Duty (Today)
+        <div className="duty-banner-card glass-card" style={{ marginBottom: '24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '1.2rem', color: '#6366f1', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🛡️ Student Duty List {dutyDate === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) ? '(Today)' : `(${dutyDate})`}
             </h2>
+            
+            {(user.role === 'admin' || user.email === 'faculty@nimbus.com') && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>Check Past Duty:</label>
+                <input 
+                  type="date" 
+                  value={dutyDate} 
+                  onChange={(e) => setDutyDate(e.target.value)}
+                  style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', width: '150px' }}
+                />
+              </div>
+            )}
+          </div>
+
+          {dutyStudents.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
               {dutyStudents.map(s => (
                 <div key={s.id} className="record-row present" style={{ display: 'flex', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.4)', borderRadius: '10px' }}>
@@ -208,11 +215,14 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <p style={{ textAlign: 'center', color: '#64748b', padding: '20px 0', border: '1px dashed #ddd', borderRadius: '10px' }}>
+              No students on duty for this date.
+            </p>
+          )}
+        </div>
 
         <div className={`dashboard-grid ${user.role === 'admin' ? 'admin-grid' : ''}`}>
-          
           {user.role === 'admin' && (
             <div className="users-list-card glass-card">
               <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '20px' }}>👥 Instructors</h2>
@@ -244,22 +254,18 @@ export default function DashboardPage() {
               initialView="dayGridMonth"
               events={calendarEvents}
               dateClick={handleDateClick}
-              headerToolbar={{
-                left: 'prev,next today',
-                center: 'title',
-                right: '',
-              }}
+              headerToolbar={{ left: 'prev,next today', center: 'title', right: '' }}
               height="auto"
             />
           </div>
 
           <div className="day-detail-card glass-card">
-            <h2>📋 {selectedDate ? `Attendance — ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}` : 'Click a date to view'}</h2>
+            <h2>📋 {selectedDate ? `Records — ${selectedDate}` : 'Click a date on Calendar'}</h2>
             
             {user.role === 'admin' && user.email !== 'faculty@nimbus.com' && selectedDate && targetUser && (
               <button 
                 className="btn btn-sm btn-accent" 
-                style={{ marginBottom: '16px', display: 'flex', width: '100%' }}
+                style={{ marginBottom: '16px', width: '100%' }}
                 onClick={() => router.push(`/attendance?date=${selectedDate}`)}
               >
                 ✎ Edit Attendance for {selectedDate}
@@ -268,69 +274,18 @@ export default function DashboardPage() {
 
             {selectedDate && dayRecords.length > 0 ? (
               <div className="day-records">
-                {(() => {
-                  const availableYears = [...new Set(dayRecords.map(r => r.roll_number ? r.roll_number.substring(0, 2) : null).filter(Boolean))].sort();
-                  
-                  const getLabel = (yr) => {
-                    if (yr === '21') return '[21] Super Final (2021)';
-                    if (yr === '22') return '[22] Final Year (2022)';
-                    if (yr === '23') return '[23] Third Year (2023)';
-                    if (yr === '24') return '[24] Second Year (2024)';
-                    if (yr === '25') return '[25] First Year (2025)';
-                    return `[${yr}] Year ${yr}`;
-                  };
-
-                  return (
-                    <div style={{ marginBottom: '16px' }}>
-                      <select 
-                        value={filterYear} 
-                        onChange={(e) => setFilterYear(e.target.value)}
-                        style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
-                      >
-                        <option value="">All Academic Years</option>
-                        {availableYears.map(yr => (
-                          <option key={yr} value={yr}>{getLabel(yr)}</option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                })()}
-                {(() => {
-                  const filtered = dayRecords
-                    .filter(r => !filterYear || (r.roll_number && r.roll_number.startsWith(filterYear)))
-                    .sort((a, b) => (a.roll_number || '').localeCompare(b.roll_number || ''));
-                  
-                  return (
-                    <>
-                      {filtered.length === 0 ? (
-                        <div className="empty-state" style={{ padding: '20px 0' }}>
-                          <p>No students found for this academic year</p>
-                        </div>
-                      ) : (
-                        filtered.map((r) => (
-                          <div key={r.student_id} className={`record-row ${r.status}`}>
-                            <span className="record-name">{r.student_name} {r.roll_number ? <span style={{ color: '#0056b3', marginLeft: '6px', fontSize: '0.9em' }}>[{r.roll_number}]</span> : ''}</span>
-                            <span className={`record-badge ${r.status}`}>
-                              {r.status === 'present' ? '✅ Present' : '❌ Absent'}
-                            </span>
-                          </div>
-                        ))
-                      )}
-                      <div className="day-summary">
-                        <span>Present: {filtered.filter(r => r.status === 'present').length}</span>
-                        <span>Absent: {filtered.filter(r => r.status === 'absent').length}</span>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            ) : selectedDate ? (
-              <div className="empty-state">
-                <p>No attendance records for this date</p>
+                {dayRecords.map((r) => (
+                  <div key={r.student_id} className={`record-row ${r.status}`}>
+                    <span className="record-name">{r.student_name} <span style={{ color: '#0056b3', marginLeft: '6px', fontSize: '0.85em' }}>[{r.roll_number}]</span></span>
+                    <span className={`record-badge ${r.status}`}>
+                      {r.status === 'present' ? '✅' : '❌'}
+                    </span>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="empty-state">
-                <p>Select a date on the calendar to view attendance details</p>
+                <p>{selectedDate ? 'No records found' : 'Select a date'}</p>
               </div>
             )}
           </div>
