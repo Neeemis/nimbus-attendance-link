@@ -14,17 +14,13 @@ export async function POST(request) {
     if (!date || !Array.isArray(studentIds)) {
       return NextResponse.json({ error: 'Date and student IDs array required' }, { status: 400 });
     }
-
     await sql.begin(async sql => {
-      // Clear old duty for students this user is allowed to manage on this date
       if (user.email === 'discipline@nimbus.com') {
         await sql`
           DELETE FROM duty_roaster 
           WHERE date = ${date}::date 
           AND student_id IN (
-            SELECT s.id FROM students s
-            LEFT JOIN users u ON s.user_id = u.id
-            WHERE s.gender ILIKE 'female' OR u.email = 'discipline@nimbus.com'
+            SELECT id FROM students WHERE gender ILIKE 'female' OR user_id = ${user.id}
           )
         `;
       } else {
@@ -84,9 +80,8 @@ export async function GET(request) {
           SELECT s.id, s.name, s.roll_number,
                  CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
           FROM students s
-          LEFT JOIN users u ON s.user_id = u.id
           LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
-          WHERE s.gender ILIKE 'female' OR u.email = 'discipline@nimbus.com'
+          WHERE s.gender ILIKE 'female' OR s.user_id = ${user.id}
           ORDER BY s.roll_number ASC, s.name ASC
         `;
       } else {
