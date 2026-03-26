@@ -7,7 +7,9 @@ export async function GET(request) {
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
 
   if (user.email !== 'discipline@nimbus.com' && user.email !== 'faculty@nimbus.com' && user.role !== 'admin') {
-    return NextResponse.json({ error: 'Access denied. Discipline only.' }, { status: 403 });
+    return NextResponse.json({ 
+      error: `Access denied. Your account (${user.email}, ${user.role}) does not have discipline access.` 
+    }, { status: 403 });
   }
 
   try {

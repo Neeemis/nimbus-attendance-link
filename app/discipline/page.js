@@ -27,7 +27,7 @@ export default function DisciplinePage() {
       setError('');
     } catch (err) {
       console.error('Failed to fetch discipline data:', err);
-      setError('Failed to load students. Ensure you have Discipline access.');
+      setError(err.response?.data?.error || 'Failed to load students. Ensure you have Discipline access.');
     } finally {
       setLoading(false);
     }
