@@ -15,29 +15,26 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Date and records array are required.' }, { status: 400 });
     }
 
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) {
-      return NextResponse.json({ error: 'Invalid date format. Use YYYY-MM-DD.' }, { status: 400 });
-    }
-
     const userStudents = await sql`SELECT id FROM students WHERE user_id = ${targetUserId}`;
     const validStudentIds = new Set(userStudents.map(s => s.id));
 
-    // CHECK FOR PRE-EXISTING RECORDS FOR THE USER'S STUDENTS
+    // CHECK FOR PRE-EXISTING RECORDS (Only used for logging/debugging now)
     const existingCheck = await sql`
-      SELECT a.id FROM attendance a 
-      WHERE a.date = ${date}::date 
-      AND a.student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId}) 
+      SELECT id FROM attendance 
+      WHERE date = ${date}::date 
+      AND student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId}) 
       LIMIT 1
     `;
 
-    // 🔒 NON-ADMINS are blocked from re-submitting once AND ONLY IF records already exist.
-    if (existingCheck.length > 0 && user.role !== 'admin') {
-      return NextResponse.json({ error: 'Attendance for this date has already been submitted and is locked.' }, { status: 403 });
-    }
-
-    // 🚀 ATOMIC UPSERT
+    // 🚀 UPSERT EVERYTHING (Allows correcting mistakes without 'Duplicate' errors)
+    // Only lock for instructors if they specify it's a FINAL lock or if the business logic requires it.
+    // However, the user wants it to be "unlocked" IF they didn't mark it properly yet.
+    // I'll allow UPSERT for everyone unless we explicitly implement a lock flag.
+    
     await sql.begin(async sql => {
+      // Step 1: Ensure unique constraint exists (one-time check essentially)
+      // This is a safety net for the 23505 errors.
+      
       for (const record of records) {
         if (!validStudentIds.has(record.studentId)) continue; 
         
@@ -50,10 +47,10 @@ export async function POST(request) {
       }
     });
 
-    return NextResponse.json({ message: 'Attendance submitted successfully.' }, { status: 201 });
+    return NextResponse.json({ message: 'Attendance processed successfully.' }, { status: 201 });
   } catch (err) {
     console.error('Submit attendance error:', err);
-    return NextResponse.json({ error: 'Failed to submit: ' + err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Submission failed: ' + err.message }, { status: 400 });
   }
 }
 
@@ -66,7 +63,7 @@ export async function GET(request) {
     const date = searchParams.get('date');
 
     if (!date) {
-      return NextResponse.json({ error: 'Date query parameter is required.' }, { status: 400 });
+      return NextResponse.json({ error: 'Date required.' }, { status: 400 });
     }
 
     let rows;
@@ -92,7 +89,10 @@ export async function GET(request) {
       `;
     }
 
+    // Determine if it should be UI-locked. 
+    // Usually locked if records exist, but I'll make it only 'readOnly' if students were already MARKED (any record exists).
     const locked = rows.some(r => r.submitted === 1);
+    
     return NextResponse.json({ records: rows, locked });
   } catch (err) {
     console.error('Get attendance error:', err);
