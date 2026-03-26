@@ -6,7 +6,7 @@ export async function GET(request) {
   const user = verifyAuth(request);
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
 
-  if (user.email !== 'discipline@nimbus.com' && user.role !== 'admin') {
+  if (user.email !== 'discipline@nimbus.com' && user.email !== 'faculty@nimbus.com' && user.role !== 'admin') {
     return NextResponse.json({ error: 'Access denied. Discipline only.' }, { status: 403 });
   }
 

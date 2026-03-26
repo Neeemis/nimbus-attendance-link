@@ -20,7 +20,7 @@ export async function POST(request) {
           DELETE FROM duty_roaster 
           WHERE date = ${date}::date
         `;
-      } else if (user.email === 'discipline@nimbus.com') {
+      } else if (user.email === 'discipline@nimbus.com' || user.email === 'faculty@nimbus.com') {
         await sql`
           DELETE FROM duty_roaster 
           WHERE date = ${date}::date 
@@ -89,7 +89,7 @@ export async function GET(request) {
         LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
         ORDER BY s.roll_number ASC, s.name ASC
       `;
-    } else if (user.email === 'discipline@nimbus.com') {
+    } else if (user.email === 'discipline@nimbus.com' || user.email === 'faculty@nimbus.com') {
       // Management View for Discipline Officer (Sees girls + their students)
       rows = await sql`
         SELECT s.id, s.name, s.roll_number,

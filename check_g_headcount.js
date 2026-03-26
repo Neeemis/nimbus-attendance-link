@@ -4,9 +4,10 @@ const sql = postgres(DATABASE_URL, { ssl: { rejectUnauthorized: false } });
 
 async function check() {
   try {
-    const users = await sql`SELECT id, email, name, role FROM users`;
-    console.log('--- ALL USERS JSON ---');
-    console.log(JSON.stringify(users, null, 2));
+    const students = await sql`SELECT count(*) FROM students`;
+    const girls = await sql`SELECT count(*) FROM students WHERE gender ILIKE 'female' OR hostel ILIKE '%Ambika%' OR hostel ILIKE '%Satpura%' OR hostel ILIKE '%Parvati%'`;
+    console.log(`Total students: ${students[0].count}`);
+    console.log(`Girls identifyable by gender/hostel: ${girls[0].count}`);
 
   } catch (err) {
     console.error('Check failed:', err.message);
