@@ -41,17 +41,32 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const [dutyStudents, setDutyStudents] = useState([]);
+
   useEffect(() => {
     if (!user.id) return;
     fetchStats();
     fetchDates();
+    fetchDuty();
     if (user.role === 'admin') {
       fetchUsers();
     }
-    // Clear out the day inspection panel when swapping users or returning home
     setSelectedDate(null);
     setDayRecords([]);
   }, [targetUser, user.id, pathname]);
+
+  const fetchDuty = async () => {
+    try {
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      // Fetch specifically for the public view (all on duty today)
+      // Since instructors only see THEIR students in my current API, 
+      // I'll update the API to allow a public view for duty.
+      const { data } = await api.get(`/duty?date=${today}&global=true`);
+      setDutyStudents(data.filter(s => s.on_duty));
+    } catch (err) {
+      console.error('Failed to load duty students:', err);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -149,6 +164,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="stats-grid">
+          {/* ... existing cards ... */}
           <div className="stat-card stat-blue">
             <div className="stat-icon">👥</div>
             <div className="stat-info">
@@ -170,14 +186,30 @@ export default function DashboardPage() {
               <span className="stat-label">Total Present</span>
             </div>
           </div>
-          <div className="stat-card stat-amber">
-            <div className="stat-icon">📊</div>
+          <div className="stat-card stat-purple">
+            <div className="stat-icon">📝</div>
             <div className="stat-info">
-              <span className="stat-value">{avgAttendance}%</span>
-              <span className="stat-label">Avg Attendance</span>
+              <span className="stat-value">{dutyStudents.length}</span>
+              <span className="stat-label">On Duty Today</span>
             </div>
           </div>
         </div>
+
+        {dutyStudents.length > 0 && (
+          <div className="duty-banner-card glass-card" style={{ marginBottom: '24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+            <h2 style={{ fontSize: '1.2rem', color: '#6366f1', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🛡️ Students On Duty (Today)
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
+              {dutyStudents.map(s => (
+                <div key={s.id} className="record-row present" style={{ display: 'flex', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.4)', borderRadius: '10px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{s.name}</span>
+                  <span style={{ marginLeft: 'auto', background: '#6366f1', color: '#fff', padding: '4px 10px', borderRadius: '50px', fontSize: '0.75rem', fontWeight: 800 }}>{s.roll_number}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className={`dashboard-grid ${user.role === 'admin' ? 'admin-grid' : ''}`}>
           

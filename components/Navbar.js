@@ -99,9 +99,14 @@ export default function Navbar() {
             </Link>
           )}
           {(user.email === 'discipline@nimbus.com' || user.email === 'faculty@nimbus.com') && (
-            <Link href="/discipline" className={navLinkClass('/discipline')} onClick={() => setMobileOpen(false)}>
-              <span className="nav-icon">🛡️</span> Status
-            </Link>
+            <>
+              <Link href="/discipline" className={navLinkClass('/discipline')} onClick={() => setMobileOpen(false)}>
+                <span className="nav-icon">🛡️</span> Status
+              </Link>
+              <Link href="/duty" className={navLinkClass('/duty')} onClick={() => setMobileOpen(false)}>
+                <span className="nav-icon">📋</span> Duty Roaster
+              </Link>
+            </>
           )}
 
           {/* 📱 Mobile User Actions */}
