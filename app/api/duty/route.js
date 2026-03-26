@@ -26,11 +26,7 @@ export async function POST(request) {
           WHERE date = ${date}::date 
           AND student_id IN (
             SELECT id FROM students 
-            WHERE gender ILIKE 'female' 
-               OR user_id = ${user.id} 
-               OR hostel ILIKE '%Ambika%' 
-               OR hostel ILIKE '%Satpura%' 
-               OR hostel ILIKE '%Parvati%'
+            WHERE user_id = ${user.id}
           )
         `;
       } else {
@@ -90,17 +86,13 @@ export async function GET(request) {
         ORDER BY s.roll_number ASC, s.name ASC
       `;
     } else if (user.email === 'discipline@nimbus.com' || user.email === 'faculty@nimbus.com') {
-      // Management View for Discipline Officer (Sees girls + their students)
+      // Management View for Discipline Officer (ONLY their assigned students)
       rows = await sql`
         SELECT s.id, s.name, s.roll_number,
                CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
         FROM students s
         LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
-        WHERE s.gender ILIKE 'female' 
-           OR s.user_id = ${user.id} 
-           OR s.hostel ILIKE '%Ambika%'
-           OR s.hostel ILIKE '%Satpura%'
-           OR s.hostel ILIKE '%Parvati%'
+        WHERE s.user_id = ${user.id}
         ORDER BY s.roll_number ASC, s.name ASC
       `;
     } else {
