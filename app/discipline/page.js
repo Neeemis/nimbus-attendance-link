@@ -11,6 +11,7 @@ export default function DisciplinePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState({});
+  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -40,7 +41,6 @@ export default function DisciplinePage() {
     const newStatus = currentStatus === 'in' ? 'out' : 'in';
     try {
       await api.put(`/discipline/girls/${id}/status`, { status: newStatus });
-      // Update local state for immediate feedback
       setStudents((prev) => 
         prev.map((s) => (s.id === id ? { ...s, campus_status: newStatus } : s))
       );
@@ -62,7 +62,6 @@ export default function DisciplinePage() {
   const inCampusCount = filteredStudents.filter((s) => s.campus_status === 'in').length;
   const outCampusCount = totalGirls - inCampusCount;
 
-  // Extract and normalize unique hostels for dropdown
   const uniqueHostels = [...new Set(students.map(s => {
     let h = s.hostel || '';
     if (/ambika|ambi/i.test(h)) return 'Ambika Girls Hostel';
@@ -74,43 +73,55 @@ export default function DisciplinePage() {
 
   return (
     <PageWrapper>
-      <div className="students-page">
-        <div className="page-header">
+      <div className="students-page fade-in">
+        <div className="page-header sticky-header">
           <div>
             <h1>Campus Status Tracker</h1>
             <p className="subtitle">Track students leaving and entering the campus</p>
           </div>
-          {user.email && ( // Assuming any logged-in user on this page can download, or add specific role check if needed
-            <button 
-              className="btn btn-accent" 
-              onClick={() => {
-                const token = localStorage.getItem('token');
-                window.open(`/api/discipline/report/pdf?token=${token}`, '_blank');
-              }}
-            >
-              📄 Export Status Report
-            </button>
-          )}
+          <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div className="date-picker-mini glass-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', marginBottom: 0 }}>
+              <label htmlFor="report-date" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>📅 Logs From:</label>
+              <input 
+                id="report-date"
+                type="date" 
+                value={reportDate}
+                onChange={(e) => setReportDate(e.target.value)}
+                style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.9rem' }}
+              />
+            </div>
+            {user.email && (
+              <button 
+                className="btn btn-accent shine-effect" 
+                onClick={() => {
+                  const token = localStorage.getItem('token');
+                  window.open(`/api/discipline/report/pdf?token=${token}&date=${reportDate}`, '_blank');
+                }}
+              >
+                📄 Export Status PDF
+              </button>
+            )}
+          </div>
         </div>
 
-{error && <div className="alert alert-error">{error}</div>}
+        {error && <div className="alert alert-error">{error}</div>}
 
-<div className="attendance-summary glass-card">
-  <div className="summary-item present">
-    <span className="summary-count">{inCampusCount}</span>
-    <span className="summary-label">In Campus</span>
-  </div>
-  <div className="summary-divider"></div>
-  <div className="summary-item absent">
-    <span className="summary-count">{outCampusCount}</span>
-    <span className="summary-label">Out Campus</span>
-  </div>
-  <div className="summary-divider"></div>
-  <div className="summary-item total">
-    <span className="summary-count">{totalGirls}</span>
-    <span className="summary-label">Total Students</span>
-  </div>
-</div>
+        <div className="attendance-summary glass-card">
+          <div className="summary-item present">
+            <span className="summary-count">{inCampusCount}</span>
+            <span className="summary-label">In Campus</span>
+          </div>
+          <div className="summary-divider"></div>
+          <div className="summary-item absent">
+            <span className="summary-count">{outCampusCount}</span>
+            <span className="summary-label">Out Campus</span>
+          </div>
+          <div className="summary-divider"></div>
+          <div className="summary-item total">
+            <span className="summary-count">{totalGirls}</span>
+            <span className="summary-label">Total Students</span>
+          </div>
+        </div>
 
         {loading ? (
           <div className="loading-state"><span className="spinner"></span> Loading data...</div>
@@ -122,7 +133,7 @@ export default function DisciplinePage() {
                 placeholder="Search student name..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ flex: 1, minWidth: 0 }}
+                style={{ flex: 2, minWidth: 0 }}
               />
               <select 
                 value={filterHostel} 
@@ -138,7 +149,7 @@ export default function DisciplinePage() {
 
             {filteredStudents.length === 0 ? (
               <div className="empty-state glass-card">
-                <p>No female students found matching your search.</p>
+                <p>No students found matching your search.</p>
               </div>
             ) : (
               <div className="student-attendance-list">

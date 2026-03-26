@@ -182,18 +182,29 @@ function AttendanceContent() {
             ))}
           </div>
 
-          {!locked && (
-            <div className="submit-bar">
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={handleSubmit}
-                disabled={submitting}
-              >
-                {submitting ? <span className="spinner"></span> : '📝 Submit Attendance'}
-              </button>
-              <p className="submit-warning">⚠️ Once submitted, attendance cannot be modified</p>
-            </div>
-          )}
+          <div className="submit-bar">
+            {locked ? (
+              <div className="submission-success-container fade-in">
+                <button className="btn btn-success btn-lg disabled" disabled>
+                  ✅ Attendance Recorded
+                </button>
+                <p className="success-footer-msg mt-3">
+                  ✨ Attendance for this date has been successfully submitted and locked.
+                </p>
+              </div>
+            ) : (
+              <>
+                <button
+                  className="btn btn-primary btn-lg shine-effect"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                >
+                  {submitting ? <><span className="spinner"></span> Submitting...</> : '📝 Submit Attendance'}
+                </button>
+                <p className="submit-warning">⚠️ Once submitted, attendance cannot be modified for this session</p>
+              </>
+            )}
+          </div>
         </>
       )}
     </div>

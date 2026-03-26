@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const { data } = await api.get('/attendance/stats');
+      const { data } = await api.get(`/attendance/stats?_t=${Date.now()}`);
       setStats(data);
     } catch (err) {
       console.error('Failed to load stats:', err);
@@ -72,7 +72,7 @@ export default function DashboardPage() {
 
   const fetchDates = async () => {
     try {
-      const { data } = await api.get('/attendance/dates');
+      const { data } = await api.get(`/attendance/dates?_t=${Date.now()}`);
       setDates(data);
     } catch (err) {
       console.error('Failed to load dates:', err);
