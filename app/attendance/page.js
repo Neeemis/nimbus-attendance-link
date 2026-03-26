@@ -186,12 +186,14 @@ function AttendanceContent() {
           <div className="submit-bar">
             {locked ? (
               <div className="submission-success-container fade-in">
-                <button className="btn btn-success btn-lg disabled" disabled>
-                  ✅ Attendance Recorded
+                <button className="btn btn-dead btn-lg" disabled>
+                   Attendance Recorded 
                 </button>
-                <p className="success-footer-msg mt-3">
-                  Attendance submitted
-                </p>
+                <div className="status-indicator">
+                   <p className="success-footer-msg mt-3">
+                    Attendance submitted
+                  </p>
+                </div>
               </div>
             ) : (
               <>
