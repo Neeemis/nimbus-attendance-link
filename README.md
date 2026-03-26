@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ NAP: NIMBUS ATTENDANCE PORTAL
 
-## Getting Started
+**NAP** is a high-performance, secure, and modern attendance management system designed for **NIMBUS**. It provides streamlined tracking of student campus status, duty assignments, and role-based access for administrators, faculty, and discipline officers.
 
-First, run the development server:
+---
 
+## ✨ Key Features
+
+### 🏢 Campus Status Tracker
+- **Real-time Monitoring**: Instant tracking of students' "Inside" or "Outside" status.
+- **Girls' Hostel Focus**: Specialized management for **Ambika**, **Satpura**, and **Parvati** hostels.
+- **Mobile Optimized**: Enlarged touch targets and reactive focus animations for quick field marking.
+
+### 📋 Duty Roaster Management
+- **Individual Assignment**: Assign duty statuses to specific student groups.
+- **Conflict Prevention**: Unique date-based assignment tracking to avoid double-booking.
+- **Scoped Visibility**: Users only see students relevant to their assigned scope.
+
+### 📊 Admin Control Center
+- **Impersonation Mode**: Admins can view and manage data as any faculty member.
+- **Global Reporting**: Comprehensive attendance views and data management tools.
+- **Secure Authentication**: JWT-based security with managed user roles.
+
+### 💎 Premium Experience
+- **Glassmorphic UI**: Beautiful dark-mode interface with frosted glass effects and smooth transitions.
+- **Dynamic Dashboard**: Interactive calendar integration using **FullCalendar** for historical data visualization.
+- **High Availability**: Deployed on **Vercel** with a high-performance **Neon PostgreSQL** database.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 14+ (App Router), React, Lucide Icons
+- **Backend**: Next.js API Routes (Serverless)
+- **Database**: PostgreSQL (Neon Serverless)
+- **Authentication**: JWT (JSON Web Tokens) with Secure Local Storage
+- **Styling**: Modern Vanilla CSS with CSS Variables & Mobile Flex-Layouts
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisite
+Ensure you have **Node.js 18+** installed on your system.
+
+### 2. Installation
+Clone the repository and install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Neeemis/nimbus-attendance-link.git
+cd nimbus-attendance-link
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Environment Setup
+Create a `.env.local` file in the root directory and add your credentials:
+```env
+DATABASE_URL=your_postgres_url
+JWT_SECRET=your_secret_key
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### 4. Running Locally
+Start the development server:
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📁 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+- `app/`: Next.js App Router (Pages & APIs)
+- `components/`: Reusable UI components (Navbar, PageWrapper, etc.)
+- `lib/`: Shared utilities (Database connection, Auth helpers, API client)
+- `public/`: Assets and static files
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🔗 Live Deployment
+The project is automatically deployed on Vercel:  
+[nimbus-attendance-link.vercel.app](https://nimbus-attendance-link.vercel.app)
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Built with ❤️ for NIMBUS.**
