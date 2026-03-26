@@ -16,19 +16,34 @@ export async function POST(request) {
     }
 
     await sql.begin(async sql => {
-      // Clear old duty for this user's students on this date
-      await sql`
-        DELETE FROM duty_roaster 
-        WHERE date = ${date}::date 
-        AND student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId})
-      `;
+      // Clear old duty for students this user is allowed to manage on this date
+      if (user.email === 'discipline@nimbus.com') {
+        await sql`
+          DELETE FROM duty_roaster 
+          WHERE date = ${date}::date 
+          AND student_id IN (
+            SELECT s.id FROM students s
+            LEFT JOIN users u ON s.user_id = u.id
+            WHERE s.gender = 'Female' OR u.email = 'discipline@nimbus.com'
+          )
+        `;
+      } else {
+        await sql`
+          DELETE FROM duty_roaster 
+          WHERE date = ${date}::date 
+          AND student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId})
+        `;
+      }
 
       if (studentIds.length > 0) {
         const insertRows = studentIds.map(sid => ({
           student_id: sid,
           date: date
         }));
-        await sql`INSERT INTO duty_roaster ${sql(insertRows, 'student_id', 'date')}`;
+        await sql`
+          INSERT INTO duty_roaster ${sql(insertRows, 'student_id', 'date')}
+          ON CONFLICT (student_id, date) DO NOTHING
+        `;
       }
     });
 

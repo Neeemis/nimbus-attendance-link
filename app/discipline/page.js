@@ -50,6 +50,29 @@ export default function DisciplinePage() {
     }
   };
 
+  const handleToggleDuty = async (studentId, currentOnDuty) => {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    
+    // Calculate new set of on-duty student IDs
+    const onDutyStudents = students.filter(s => s.on_duty).map(s => s.id);
+    let newOnDutyIds;
+    if (currentOnDuty) {
+      newOnDutyIds = onDutyStudents.filter(id => id !== studentId);
+    } else {
+      newOnDutyIds = [...onDutyStudents, studentId];
+    }
+
+    try {
+      await api.post('/duty', { date: today, studentIds: newOnDutyIds });
+      setStudents(prev => 
+        prev.map(s => (s.id === studentId ? { ...s, on_duty: !currentOnDuty } : s))
+      );
+    } catch (err) {
+      console.error('Failed to toggle duty:', err);
+      setError('Failed to update duty roaster.');
+    }
+  };
+
   const filteredStudents = students.filter(student => {
     const safeName = student.name || '';
     const safeSearch = searchTerm || '';
@@ -76,8 +99,8 @@ export default function DisciplinePage() {
       <div className="students-page fade-in">
         <div className="page-header sticky-header">
           <div>
-            <h1>Campus Status Tracker</h1>
-            <p className="subtitle">Track students leaving and entering the campus</p>
+            <h1>🛡️ Discipline & Duty Roaster</h1>
+            <p className="subtitle">Manage student status and duty roaster for today</p>
           </div>
           <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <div className="date-picker-mini glass-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', marginBottom: 0 }}>
@@ -153,6 +176,12 @@ export default function DisciplinePage() {
               </div>
             ) : (
               <div className="student-attendance-list">
+                <div className="attendance-header" style={{ padding: '12px 20px', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', fontSize: '0.8rem', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center' }}>
+                  <span style={{ width: '40px' }}>#</span>
+                  <span style={{ flex: 1 }}>Student Info</span>
+                  <span style={{ width: '60px', textAlign: 'center', marginRight: '20px' }}>Duty</span>
+                  <span style={{ width: '180px', textAlign: 'center' }}>Campus Status</span>
+                </div>
                 {filteredStudents.map((student, index) => {
                   const isIn = student.campus_status === 'in';
                   return (
@@ -172,7 +201,28 @@ export default function DisciplinePage() {
                         </div>
                       </div>
                       
-                      <div style={{ marginRight: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '60px', marginRight: '20px', display: 'flex', justifyContent: 'center' }}>
+                        <div 
+                          onClick={(e) => { e.stopPropagation(); handleToggleDuty(student.id, student.on_duty); }}
+                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', gap: '4px' }}
+                        >
+                          <div style={{ 
+                            width: '24px', 
+                            height: '24px', 
+                            borderRadius: '6px', 
+                            border: '2px solid #6366f1', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            background: student.on_duty ? '#6366f1' : 'transparent',
+                            transition: 'all 0.2s'
+                          }}>
+                            {student.on_duty && <span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ width: '180px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
                         <span className={`row-status ${isIn ? 'present' : 'absent'}`} style={{ minWidth: '80px', textAlign: 'center' }}>
                           {isIn ? 'Inside' : 'Outside'}
                         </span>

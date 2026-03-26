@@ -11,10 +11,13 @@ export async function GET(request) {
   }
 
   try {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     const rows = await sql`
-      SELECT s.id, s.name, s.roll_number, s.gender, s.hostel, s.campus_status, u.name as club_name
+      SELECT s.id, s.name, s.roll_number, s.gender, s.hostel, s.campus_status, u.name as club_name,
+             CASE WHEN dr.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
       FROM students s
       LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN duty_roaster dr ON s.id = dr.student_id AND dr.date = ${today}::date
       WHERE s.gender = 'Female' OR u.email = 'discipline@nimbus.com'
       ORDER BY s.roll_number ASC, s.name ASC
     `;
