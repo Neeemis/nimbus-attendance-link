@@ -15,7 +15,7 @@ export async function GET(request) {
       SELECT s.id, s.name, s.roll_number, s.gender, s.hostel, s.campus_status, u.name as club_name
       FROM students s
       LEFT JOIN users u ON s.user_id = u.id
-      WHERE s.gender = 'Female'
+      WHERE s.gender = 'Female' OR u.email = 'discipline@nimbus.com'
       ORDER BY s.roll_number ASC, s.name ASC
     `;
     return NextResponse.json(rows);

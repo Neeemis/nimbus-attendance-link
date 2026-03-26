@@ -12,24 +12,24 @@ export async function GET(request) {
 
     if (user.role === 'admin' && !searchParams.get('userId')) {
       rows = await sql`
-        SELECT a.date,
+        SELECT TO_CHAR(a.date, 'YYYY-MM-DD') as date,
                SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_count,
                COUNT(*) as total_count
         FROM attendance a
         GROUP BY a.date
-        ORDER BY a.date
+        ORDER BY a.date ASC
       `;
     } else {
       const targetUserId = getTargetUserId(user, searchParams);
       rows = await sql`
-        SELECT a.date,
+        SELECT TO_CHAR(a.date, 'YYYY-MM-DD') as date,
                SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_count,
                COUNT(*) as total_count
         FROM attendance a
         JOIN students s ON a.student_id = s.id
         WHERE s.user_id = ${targetUserId}
         GROUP BY a.date
-        ORDER BY a.date
+        ORDER BY a.date ASC
       `;
     }
 

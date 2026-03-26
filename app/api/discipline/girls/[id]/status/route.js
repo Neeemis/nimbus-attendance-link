@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
 
+import { getSyncedTime } from '@/lib/time';
+
 export async function PUT(request, { params }) {
   const user = verifyAuth(request);
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
@@ -23,10 +25,21 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Student not found.' }, { status: 404 });
     }
 
-    const [student] = await sql`
-      UPDATE students SET campus_status = ${status} WHERE id = ${id}
-      RETURNING id, name, roll_number, gender, hostel, campus_status
-    `;
+    const now = await getSyncedTime();
+    const [student] = await sql.begin(async (tx) => {
+      const [s] = await tx`
+        UPDATE students 
+        SET campus_status = ${status}, 
+            campus_status_time = ${now} 
+        WHERE id = ${id}
+        RETURNING id, name, roll_number, gender, hostel, campus_status, campus_status_time
+      `;
+      await tx`
+        INSERT INTO campus_status_logs (student_id, action, timestamp)
+        VALUES (${id}, ${status}, ${now})
+      `;
+      return [s];
+    });
 
     return NextResponse.json(student);
   } catch (err) {

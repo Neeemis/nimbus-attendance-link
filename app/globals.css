@@ -3,6 +3,10 @@
 /* =============================================
    DESIGN TOKENS
    ============================================= */
+.mobile-user-actions, .mobile-only {
+  display: none !important;
+}
+
 :root {
   /* Colors - Deep blue/violet palette */
   --bg-primary: #0f0f1a;
@@ -372,19 +376,42 @@ label {
 .mobile-toggle {
   display: none;
   flex-direction: column;
-  gap: 5px;
-  background: none;
-  border: none;
+  justify-content: space-between;
+  width: 32px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
+  border-radius: 6px;
+  z-index: 3000;
+  transition: var(--transition);
+}
+
+.mobile-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-primary);
 }
 
 .mobile-toggle span {
-  width: 22px;
-  height: 2px;
-  background: var(--text-secondary);
-  border-radius: 2px;
-  transition: all var(--transition);
+  width: 100%;
+  height: 1.5px;
+  background: #fff;
+  border-radius: 4px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-inner.mobile-active .mobile-toggle span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.navbar-inner.mobile-active .mobile-toggle span:nth-child(2) {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.navbar-inner.mobile-active .mobile-toggle span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 /* =============================================
@@ -1015,15 +1042,19 @@ label {
    ============================================= */
 @media (max-width: 768px) {
   .main-content {
-    padding: 16px 12px;
-    margin-top: calc(var(--navbar-height) - 10px);
+    padding: 16px 16px;
+    margin-top: calc(var(--navbar-height) + 10px); /* Increased spacing */
   }
 
   .page-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 20px;
+    align-items: stretch; /* Button full width on mobile */
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .page-header .btn {
+    width: 100%; /* Force button to take own line and full width */
   }
 
   .page-header h1 {
@@ -1035,49 +1066,173 @@ label {
     font-size: 0.85rem;
   }
 
-  /* Navbar mobile */
+}
+
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--navbar-height);
+  background: rgba(15, 15, 26, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100000 !important;
+}
+
+/* Smoother Dashboard & Lists */
+.stat-card, .glass-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover, .glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-row {
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.attendance-row:active {
+  transform: scale(0.99);
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.submission-success-container {
+  text-align: center;
+  padding: 40px;
+  background: rgba(15, 23, 42, 0.03);
+  border-radius: 20px;
+  border: 2px dashed #000;
+}
+
+.btn-dead {
+  background: #000 !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: not-allowed !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 16px 32px !important;
+  box-shadow: 0 4px 0 #333 !important;
+  opacity: 1 !important;
+}
+
+.success-footer-msg {
+  color: #000 !important;
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+  margin-top: 16px;
+  letter-spacing: -0.5px;
+}
+
+.shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+/* User Actions Mobile Optimization (Refined) */
+@media (max-width: 768px) {
+  .user-actions {
+    display: none !important;
+  }
   .navbar-inner {
     padding: 0 16px;
     justify-content: space-between;
   }
 
-  .mobile-toggle { display: flex; order: 3; }
-  .navbar-brand { order: 1; }
-  .navbar-user.desktop-only { display: none; }
+  .desktop-only { display: none !important; }
+
+  .mobile-toggle { 
+    display: flex; 
+    order: 3; 
+    z-index: 100002 !important;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .navbar-brand { 
+    order: 1; 
+    z-index: 100003; 
+    transform: scale(0.85); /* Shrink logo/brand on mobile */
+    transform-origin: left center;
+  }
 
   .navbar-links {
-    position: fixed;
-    top: var(--navbar-height);
-    left: 0; right: 0;
-    bottom: 0;
-    background: rgba(10, 10, 20, 0.98);
-    backdrop-filter: blur(25px);
+    display: none;
     flex-direction: column;
-    padding: 24px;
-    gap: 12px;
-    border-top: 1px solid var(--border);
-    transform: translateX(100%);
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 2000;
+    position: fixed;
+    inset: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    padding: 100px 24px 40px;
+    z-index: 100001 !important;
+    overflow-y: auto;
+    animation: fadeInFull 0.3s ease-out forwards;
   }
 
   .navbar-links.open {
-    transform: translateX(0);
-    opacity: 1;
-    pointer-events: all;
+    display: flex !important;
+  }
+
+  @keyframes fadeInFull {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   .nav-link {
-    font-size: 1.1rem;
-    padding: 14px 20px;
-    background: rgba(255, 255, 255, 0.03);
+    font-size: 1.25rem;
+    font-weight: 600;
+    padding: 18px 24px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     width: 100%;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 
   .mobile-user-actions {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     gap: 12px;
     margin-top: auto;

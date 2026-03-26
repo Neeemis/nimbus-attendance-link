@@ -10,6 +10,14 @@ export default function DisciplinePage() {
   const [filterHostel, setFilterHostel] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [user, setUser] = useState({});
+  const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setUser(JSON.parse(localStorage.getItem('user') || '{}'));
+    }
+  }, []);
 
   const fetchGirls = async () => {
     setLoading(true);
@@ -33,7 +41,6 @@ export default function DisciplinePage() {
     const newStatus = currentStatus === 'in' ? 'out' : 'in';
     try {
       await api.put(`/discipline/girls/${id}/status`, { status: newStatus });
-      // Update local state for immediate feedback
       setStudents((prev) => 
         prev.map((s) => (s.id === id ? { ...s, campus_status: newStatus } : s))
       );
@@ -55,22 +62,45 @@ export default function DisciplinePage() {
   const inCampusCount = filteredStudents.filter((s) => s.campus_status === 'in').length;
   const outCampusCount = totalGirls - inCampusCount;
 
-  // Extract and normalize unique hostels for dropdown
   const uniqueHostels = [...new Set(students.map(s => {
     let h = s.hostel || '';
     if (/ambika|ambi/i.test(h)) return 'Ambika Girls Hostel';
     if (/satpura/i.test(h)) return 'Satpura Girls Hostel';
     if (/parvati/i.test(h)) return 'Parvati Girls Hostel';
+    if (/mani|mahesh/i.test(h)) return 'Manimahesh Hostel';
     return h;
-  }).filter(h => h && h.toLowerCase().includes('girls')))].sort();
+  }).filter(h => h))].sort();
 
   return (
     <PageWrapper>
-      <div className="students-page">
-        <div className="page-header">
+      <div className="students-page fade-in">
+        <div className="page-header sticky-header">
           <div>
             <h1>Campus Status Tracker</h1>
-            <p className="subtitle">Track female students leaving and entering the campus</p>
+            <p className="subtitle">Track students leaving and entering the campus</p>
+          </div>
+          <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div className="date-picker-mini glass-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', marginBottom: 0 }}>
+              <label htmlFor="report-date" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>📅 Logs From:</label>
+              <input 
+                id="report-date"
+                type="date" 
+                value={reportDate}
+                onChange={(e) => setReportDate(e.target.value)}
+                style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '0.9rem' }}
+              />
+            </div>
+            {user.email && (
+              <button 
+                className="btn btn-accent shine-effect" 
+                onClick={() => {
+                  const token = localStorage.getItem('token');
+                  window.open(`/api/discipline/report/pdf?token=${token}&date=${reportDate}`, '_blank');
+                }}
+              >
+                📄 Export Status PDF
+              </button>
+            )}
           </div>
         </div>
 
@@ -89,7 +119,7 @@ export default function DisciplinePage() {
           <div className="summary-divider"></div>
           <div className="summary-item total">
             <span className="summary-count">{totalGirls}</span>
-            <span className="summary-label">Total Girls</span>
+            <span className="summary-label">Total Students</span>
           </div>
         </div>
 
@@ -103,7 +133,7 @@ export default function DisciplinePage() {
                 placeholder="Search student name..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ flex: 1, minWidth: 0 }}
+                style={{ flex: 2, minWidth: 0 }}
               />
               <select 
                 value={filterHostel} 
@@ -119,7 +149,7 @@ export default function DisciplinePage() {
 
             {filteredStudents.length === 0 ? (
               <div className="empty-state glass-card">
-                <p>No female students found matching your search.</p>
+                <p>No students found matching your search.</p>
               </div>
             ) : (
               <div className="student-attendance-list">
@@ -146,12 +176,14 @@ export default function DisciplinePage() {
                         <span className={`row-status ${isIn ? 'present' : 'absent'}`} style={{ minWidth: '80px', textAlign: 'center' }}>
                           {isIn ? 'Inside' : 'Outside'}
                         </span>
-                        <button 
-                          className={`btn btn-sm ${isIn ? 'btn-outline' : 'btn-primary'}`} 
-                          onClick={() => handleToggleStatus(student.id, student.campus_status)}
-                        >
-                          Mark {isIn ? 'OUT' : 'IN'}
-                        </button>
+                        {user.email !== 'faculty@nimbus.com' && (
+                          <button 
+                            className={`btn btn-sm ${isIn ? 'btn-outline' : 'btn-primary'}`} 
+                            onClick={() => handleToggleStatus(student.id, student.campus_status)}
+                          >
+                            Mark {isIn ? 'OUT' : 'IN'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

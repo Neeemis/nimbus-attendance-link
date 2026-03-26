@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import PageWrapper from '@/components/PageWrapper';
@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [filterYear, setFilterYear] = useState('');
   const [users, setUsers] = useState([]);
   
+  const pathname = usePathname();
   const [user, setUser] = useState({});
   const [targetUser, setTargetUser] = useState(null);
 
@@ -47,10 +48,10 @@ export default function DashboardPage() {
     if (user.role === 'admin') {
       fetchUsers();
     }
-    // Clear out the day inspection panel when swapping users
+    // Clear out the day inspection panel when swapping users or returning home
     setSelectedDate(null);
     setDayRecords([]);
-  }, [targetUser, user.id]);
+  }, [targetUser, user.id, pathname]);
 
   const fetchUsers = async () => {
     try {
@@ -63,7 +64,7 @@ export default function DashboardPage() {
 
   const fetchStats = async () => {
     try {
-      const { data } = await api.get('/attendance/stats');
+      const { data } = await api.get(`/attendance/stats?_t=${Date.now()}`);
       setStats(data);
     } catch (err) {
       console.error('Failed to load stats:', err);
@@ -72,7 +73,7 @@ export default function DashboardPage() {
 
   const fetchDates = async () => {
     try {
-      const { data } = await api.get('/attendance/dates');
+      const { data } = await api.get(`/attendance/dates?_t=${Date.now()}`);
       setDates(data);
     } catch (err) {
       console.error('Failed to load dates:', err);
@@ -119,7 +120,7 @@ export default function DashboardPage() {
 
   const calendarEvents = dates.map((d) => ({
     title: `${d.present_count}/${d.total_count} Present`,
-    date: d.date.split('T')[0],
+    date: d.date || (typeof d.date === 'string' && d.date.split('T')[0]) || '',
     backgroundColor: (d.present_count / d.total_count) >= 0.75 ? '#22c55e' : (d.present_count / d.total_count) >= 0.5 ? '#f59e0b' : '#ef4444',
     borderColor: 'transparent',
     textColor: '#fff',

@@ -39,7 +39,7 @@ function AttendanceContent() {
     try {
       const { data } = await api.get(`/attendance?date=${d}`);
       const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
-      setLocked(user.role === 'admin' ? false : data.locked);
+      setLocked((user.role === 'admin' && user.email !== 'faculty@nimbus.com') ? false : data.locked || user.email === 'faculty@nimbus.com');
       const map = {};
       data.records.forEach((r) => {
         map[r.student_id] = r.status === 'present';
@@ -108,13 +108,14 @@ function AttendanceContent() {
 
       <div className="attendance-controls glass-card">
         <div className="date-picker-group">
-          <label htmlFor="att-date">📅 Select Date</label>
+          <label htmlFor="att-date">📅 Attendance for Today</label>
           <input
             id="att-date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
+            min={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
+            max={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })}
           />
         </div>
 
@@ -182,18 +183,31 @@ function AttendanceContent() {
             ))}
           </div>
 
-          {!locked && (
-            <div className="submit-bar">
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={handleSubmit}
-                disabled={submitting}
-              >
-                {submitting ? <span className="spinner"></span> : '📝 Submit Attendance'}
-              </button>
-              <p className="submit-warning">⚠️ Once submitted, attendance cannot be modified</p>
-            </div>
-          )}
+          <div className="submit-bar">
+            {locked ? (
+              <div className="submission-success-container fade-in">
+                <button className="btn btn-dead btn-lg" disabled>
+                   Attendance Recorded 
+                </button>
+                <div className="status-indicator">
+                   <p className="success-footer-msg mt-3">
+                    Attendance submitted
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <button
+                  className="btn btn-primary btn-lg shine-effect"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                >
+                  {submitting ? <><span className="spinner"></span> Submitting...</> : '📝 Submit Attendance'}
+                </button>
+                <p className="submit-warning">⚠️ Once submitted, attendance cannot be modified for this session</p>
+              </>
+            )}
+          </div>
         </>
       )}
     </div>

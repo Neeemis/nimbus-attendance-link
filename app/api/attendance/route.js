@@ -23,43 +23,40 @@ export async function POST(request) {
     const userStudents = await sql`SELECT id FROM students WHERE user_id = ${targetUserId}`;
     const validStudentIds = new Set(userStudents.map(s => s.id));
 
-    const [existingCheck] = await sql`
-      SELECT a.id FROM attendance a
-      JOIN students s ON a.student_id = s.id
-      WHERE s.user_id = ${targetUserId} AND a.date = ${date}::date LIMIT 1
-    `;
+    // 🚀 ATOMIC RE-WRITE (Delete existing for target + insert fresh)
+    // This is the most robust way to avoid "duplicate key" issues without knowing the exact unique constraint name.
+    await sql.begin(async sql => {
+      // Step 1: Remove any records for this user's students on this specific day
+      await sql`
+        DELETE FROM attendance 
+        WHERE date = ${date}::date 
+        AND student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId})
+      `;
 
-    if (existingCheck && user.role !== 'admin') {
-      return NextResponse.json({ error: 'Attendance for this date has already been submitted and is locked.' }, { status: 403 });
-    }
-
-    try {
-      await sql.begin(async sql => {
-        if (user.role === 'admin' && existingCheck) {
-          await sql`DELETE FROM attendance WHERE date = ${date}::date AND student_id IN (SELECT id FROM students WHERE user_id = ${targetUserId})`;
-        }
-        for (const record of records) {
-          if (!validStudentIds.has(record.studentId)) {
-            throw new Error(`Student ID ${record.studentId} does not belong to you.`);
-          }
-          const status = record.status === 'present' ? 'present' : 'absent';
-          await sql`INSERT INTO attendance (student_id, date, status) VALUES (${record.studentId}, ${date}::date, ${status})`;
+      // Step 2: Batch insert the new records (Deduplicated to prevent PK violations in same batch)
+      const uniqueRecordsMap = new Map();
+      records.forEach(r => {
+        if (validStudentIds.has(r.studentId)) {
+          uniqueRecordsMap.set(r.studentId, {
+            student_id: r.studentId,
+            date: date,
+            status: r.status === 'present' ? 'present' : 'absent'
+          });
         }
       });
-    } catch (txErr) {
-      if (txErr.message.includes('does not belong')) {
-        return NextResponse.json({ error: txErr.message }, { status: 400 });
+
+      const insertRows = Array.from(uniqueRecordsMap.values());
+
+      if (insertRows.length > 0) {
+        console.log(`🚀 Inserting ${insertRows.length} unique records for ${date}`);
+        await sql`INSERT INTO attendance ${sql(insertRows, 'student_id', 'date', 'status')}`;
       }
-      throw txErr;
-    }
+    });
 
     return NextResponse.json({ message: 'Attendance submitted successfully.' }, { status: 201 });
   } catch (err) {
     console.error('Submit attendance error:', err);
-    if (err.code === '23505') {
-      return NextResponse.json({ error: 'Duplicate attendance entry detected. Attendance is locked.' }, { status: 403 });
-    }
-    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
+    return NextResponse.json({ error: 'Submission failed: ' + err.message }, { status: 500 });
   }
 }
 
@@ -98,7 +95,9 @@ export async function GET(request) {
       `;
     }
 
+    // A session is considered "Marked/Locked" if ANY record exists for the selected set of students.
     const locked = rows.some(r => r.submitted === 1);
+    
     return NextResponse.json({ records: rows, locked });
   } catch (err) {
     console.error('Get attendance error:', err);
