@@ -7,6 +7,10 @@ async function check() {
     const genders = await sql`SELECT DISTINCT gender FROM students`;
     console.log('--- Genders in DB ---');
     console.log(genders);
+    
+    // Check if any girls are being missed by ILIKE 'female'
+    const others = await sql`SELECT count(*) FROM students WHERE gender NOT ILIKE 'female' AND gender NOT ILIKE 'male'`;
+    console.log(`Students with gender neither male nor female: ${others[0].count}`);
 
   } catch (err) {
     console.error('Check failed:', err.message);

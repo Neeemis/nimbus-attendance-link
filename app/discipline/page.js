@@ -85,14 +85,20 @@ export default function DisciplinePage() {
   const inCampusCount = filteredStudents.filter((s) => s.campus_status === 'in').length;
   const outCampusCount = totalGirls - inCampusCount;
 
-  const uniqueHostels = [...new Set(students.map(s => {
+  const GIRLS_HOSTELS = ['Ambika Girls Hostel', 'Satpura Girls Hostel', 'Parvati Girls Hostel'];
+  
+  const foundHostels = [...new Set(students.map(s => {
     let h = s.hostel || '';
     if (/ambika|ambi/i.test(h)) return 'Ambika Girls Hostel';
     if (/satpura/i.test(h)) return 'Satpura Girls Hostel';
     if (/parvati/i.test(h)) return 'Parvati Girls Hostel';
-    if (/mani|mahesh/i.test(h)) return 'Manimahesh Hostel';
+    // Don't auto-map to Manimahesh here if we want only girls hostels shown by default, 
+    // but check if they have girls
     return h;
-  }).filter(h => h))].sort();
+  }).filter(h => h))];
+
+  // Merge known girls hostels with any other found ones
+  const displayedHostels = Array.from(new Set([...GIRLS_HOSTELS, ...foundHostels])).sort();
 
   return (
     <PageWrapper>
@@ -164,7 +170,7 @@ export default function DisciplinePage() {
                 style={{ flex: 1, minWidth: 0 }}
               >
                 <option value="">All Hostels</option>
-                {uniqueHostels.map(hostel => (
+                {displayedHostels.map(hostel => (
                   <option key={hostel} value={hostel}>{hostel}</option>
                 ))}
               </select>

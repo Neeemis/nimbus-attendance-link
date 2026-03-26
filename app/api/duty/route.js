@@ -15,12 +15,22 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Date and student IDs array required' }, { status: 400 });
     }
     await sql.begin(async sql => {
-      if (user.email === 'discipline@nimbus.com') {
+      if (user.role === 'admin') {
+        await sql`
+          DELETE FROM duty_roaster 
+          WHERE date = ${date}::date
+        `;
+      } else if (user.email === 'discipline@nimbus.com') {
         await sql`
           DELETE FROM duty_roaster 
           WHERE date = ${date}::date 
           AND student_id IN (
-            SELECT id FROM students WHERE gender ILIKE 'female' OR user_id = ${user.id}
+            SELECT id FROM students 
+            WHERE gender ILIKE 'female' 
+               OR user_id = ${user.id} 
+               OR hostel ILIKE '%Ambika%' 
+               OR hostel ILIKE '%Satpura%' 
+               OR hostel ILIKE '%Parvati%'
           )
         `;
       } else {
@@ -61,7 +71,7 @@ export async function GET(request) {
     if (!date) return NextResponse.json({ error: 'Date required' }, { status: 400 });
 
     let rows;
-    if (isGlobal || user.role === 'admin') {
+    if (isGlobal) {
       // GLOBAL VIEW: All students on duty today
       rows = await sql`
         SELECT s.id, s.name, s.roll_number,
@@ -70,31 +80,40 @@ export async function GET(request) {
         JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
         ORDER BY s.roll_number ASC, s.name ASC
       `;
+    } else if (user.role === 'admin') {
+      // Management View for Admin (Sees all students)
+      rows = await sql`
+        SELECT s.id, s.name, s.roll_number,
+               CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
+        FROM students s
+        LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
+        ORDER BY s.roll_number ASC, s.name ASC
+      `;
+    } else if (user.email === 'discipline@nimbus.com') {
+      // Management View for Discipline Officer (Sees girls + their students)
+      rows = await sql`
+        SELECT s.id, s.name, s.roll_number,
+               CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
+        FROM students s
+        LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
+        WHERE s.gender ILIKE 'female' 
+           OR s.user_id = ${user.id} 
+           OR s.hostel ILIKE '%Ambika%'
+           OR s.hostel ILIKE '%Satpura%'
+           OR s.hostel ILIKE '%Parvati%'
+        ORDER BY s.roll_number ASC, s.name ASC
+      `;
     } else {
-      // SUPERVISOR VIEW
+      // Supervisor View: Only their own (already standard code)
       const targetUserId = getTargetUserId(user, searchParams);
-      
-      if (user.email === 'discipline@nimbus.com') {
-        // Discipline officer sees Females + those assigned to them
-        rows = await sql`
-          SELECT s.id, s.name, s.roll_number,
-                 CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
-          FROM students s
-          LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
-          WHERE s.gender ILIKE 'female' OR s.user_id = ${user.id}
-          ORDER BY s.roll_number ASC, s.name ASC
-        `;
-      } else {
-        // Regular staff only see their own assigned students
-        rows = await sql`
-          SELECT s.id, s.name, s.roll_number,
-                 CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
-          FROM students s
-          LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
-          WHERE s.user_id = ${targetUserId}
-          ORDER BY s.roll_number ASC, s.name ASC
-        `;
-      }
+      rows = await sql`
+        SELECT s.id, s.name, s.roll_number,
+               CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
+        FROM students s
+        LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
+        WHERE s.user_id = ${targetUserId}
+        ORDER BY s.roll_number ASC, s.name ASC
+      `;
     }
 
     return NextResponse.json(rows);
