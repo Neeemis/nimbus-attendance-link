@@ -24,7 +24,7 @@ export async function POST(request) {
           AND student_id IN (
             SELECT s.id FROM students s
             LEFT JOIN users u ON s.user_id = u.id
-            WHERE s.gender = 'Female' OR u.email = 'discipline@nimbus.com'
+            WHERE s.gender ILIKE 'female' OR u.email = 'discipline@nimbus.com'
           )
         `;
       } else {
@@ -86,7 +86,7 @@ export async function GET(request) {
           FROM students s
           LEFT JOIN users u ON s.user_id = u.id
           LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
-          WHERE s.gender = 'Female' OR u.email = 'discipline@nimbus.com'
+          WHERE s.gender ILIKE 'female' OR u.email = 'discipline@nimbus.com'
           ORDER BY s.roll_number ASC, s.name ASC
         `;
       } else {

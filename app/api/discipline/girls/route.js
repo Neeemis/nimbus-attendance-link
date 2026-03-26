@@ -18,7 +18,7 @@ export async function GET(request) {
       FROM students s
       LEFT JOIN users u ON s.user_id = u.id
       LEFT JOIN duty_roaster dr ON s.id = dr.student_id AND dr.date = ${today}::date
-      WHERE s.gender = 'Female' OR u.email = 'discipline@nimbus.com'
+      WHERE s.gender ILIKE 'female' OR u.email = 'discipline@nimbus.com'
       ORDER BY s.roll_number ASC, s.name ASC
     `;
     return NextResponse.json(rows);
