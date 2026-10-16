@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { verifyAuth, getTargetUserId } from '@/lib/auth';
+import { ensureExtensionSchema } from '@/lib/schema';
 
 export async function POST(request) {
   const user = verifyAuth(request);
@@ -72,10 +73,12 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Date query parameter is required.' }, { status: 400 });
     }
 
+    await ensureExtensionSchema();
     let rows;
     if (user.role === 'admin' && !searchParams.get('userId')) {
       rows = await sql`
         SELECT s.id as student_id, s.name as student_name, s.roll_number as roll_number,
+                COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,
                 COALESCE(a.status, 'absent') as status,
                 CASE WHEN a.id IS NOT NULL THEN 1 ELSE 0 END as submitted
          FROM students s
@@ -86,6 +89,7 @@ export async function GET(request) {
       const targetUserId = getTargetUserId(user, searchParams);
       rows = await sql`
         SELECT s.id as student_id, s.name as student_name, s.roll_number as roll_number,
+                COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,
                 COALESCE(a.status, 'absent') as status,
                 CASE WHEN a.id IS NOT NULL THEN 1 ELSE 0 END as submitted
          FROM students s

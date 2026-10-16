@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { verifyAuth } from '@/lib/auth';
+import { ensureExtensionSchema } from '@/lib/schema';
 
 export async function GET(request) {
   const user = verifyAuth(request);
@@ -13,11 +14,14 @@ export async function GET(request) {
   }
 
   try {
+    await ensureExtensionSchema();
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     let rows;
     if (user.role === 'admin') {
       rows = await sql`
         SELECT s.id, s.name, s.roll_number, s.gender, s.hostel, s.campus_status, u.name as club_name,
+               COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,
+               s.extension_cancelled_at, s.extension_cancelled_by, s.extension_cancelled_reason,
                CASE WHEN dr.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
         FROM students s
         LEFT JOIN users u ON s.user_id = u.id
@@ -27,6 +31,8 @@ export async function GET(request) {
     } else {
       rows = await sql`
         SELECT s.id, s.name, s.roll_number, s.gender, s.hostel, s.campus_status, u.name as club_name,
+               COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,
+               s.extension_cancelled_at, s.extension_cancelled_by, s.extension_cancelled_reason,
                CASE WHEN dr.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
         FROM students s
         LEFT JOIN users u ON s.user_id = u.id

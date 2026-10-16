@@ -1,19 +1,36 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { verifyAuth, getTargetUserId } from '@/lib/auth';
+import { ensureExtensionSchema } from '@/lib/schema';
 
 export async function GET(request) {
   const user = verifyAuth(request);
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
 
   try {
+    await ensureExtensionSchema();
     const { searchParams } = new URL(request.url);
     let rows;
     if (user.role === 'admin' && !searchParams.get('userId')) {
-      rows = await sql`SELECT id, name, roll_number, gender, hostel, created_at FROM students ORDER BY roll_number ASC, name ASC`;
+      rows = await sql`
+        SELECT id, name, roll_number, gender, hostel, 
+               COALESCE(extension_cancelled, FALSE) as extension_cancelled,
+               extension_cancelled_at, extension_cancelled_by, extension_cancelled_reason,
+               created_at 
+        FROM students 
+        ORDER BY roll_number ASC, name ASC
+      `;
     } else {
       const targetUserId = getTargetUserId(user, searchParams);
-      rows = await sql`SELECT id, name, roll_number, gender, hostel, created_at FROM students WHERE user_id = ${targetUserId} ORDER BY roll_number ASC, name ASC`;
+      rows = await sql`
+        SELECT id, name, roll_number, gender, hostel, 
+               COALESCE(extension_cancelled, FALSE) as extension_cancelled,
+               extension_cancelled_at, extension_cancelled_by, extension_cancelled_reason,
+               created_at 
+        FROM students 
+        WHERE user_id = ${targetUserId} 
+        ORDER BY roll_number ASC, name ASC
+      `;
     }
     return NextResponse.json(rows);
   } catch (err) {

@@ -13,6 +13,7 @@ export default function Navbar() {
 
   // 📝 Self update state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showModalPasswords, setShowModalPasswords] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', next: '', confirm: '' });
   const [modalError, setModalError] = useState('');
   const [modalSuccess, setModalSuccess] = useState('');
@@ -129,23 +130,80 @@ export default function Navbar() {
 
       {showPasswordModal && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(10, 10, 20, 0.75)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-          <div className="glass-card" style={{ width: '90%', maxWidth: '400px', padding: '32px' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '20px', background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Change Password</h2>
+          <div className="glass-card" style={{ width: '90%', maxWidth: '420px', padding: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Change Password</h2>
+              <button 
+                type="button" 
+                onClick={() => setShowModalPasswords(!showModalPasswords)}
+                style={{ background: 'none', border: 'none', color: showModalPasswords ? '#38bdf8' : '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}
+              >
+                {showModalPasswords ? '🙈 Hide' : '👁️ Show passwords'}
+              </button>
+            </div>
             {modalError && <div className="alert alert-error" style={{ marginBottom: '16px', padding: '10px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontSize: '0.85rem' }}>{modalError}</div>}
             {modalSuccess && <div className="alert alert-success" style={{ marginBottom: '16px', padding: '10px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '0.85rem' }}>{modalSuccess}</div>}
             
             <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Current Password</label>
-                <input type="password" value={passwords.current} onChange={e => setPasswords({...passwords, current: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(20, 20, 35, 0.6)' }} required />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showModalPasswords ? "text" : "password"} 
+                    value={passwords.current} 
+                    onChange={e => setPasswords({...passwords, current: e.target.value})} 
+                    style={{ width: '100%', padding: '10px 40px 10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(20, 20, 35, 0.6)' }} 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowModalPasswords(!showModalPasswords)}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.7 }}
+                    aria-label="Toggle password visibility"
+                  >
+                    {showModalPasswords ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
               <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>New Password</label>
-                <input type="password" value={passwords.next} onChange={e => setPasswords({...passwords, next: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(20, 20, 35, 0.6)' }} required />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showModalPasswords ? "text" : "password"} 
+                    value={passwords.next} 
+                    onChange={e => setPasswords({...passwords, next: e.target.value})} 
+                    style={{ width: '100%', padding: '10px 40px 10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(20, 20, 35, 0.6)' }} 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowModalPasswords(!showModalPasswords)}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.7 }}
+                    aria-label="Toggle password visibility"
+                  >
+                    {showModalPasswords ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
               <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Confirm New Password</label>
-                <input type="password" value={passwords.confirm} onChange={e => setPasswords({...passwords, confirm: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(20, 20, 35, 0.6)' }} required />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showModalPasswords ? "text" : "password"} 
+                    value={passwords.confirm} 
+                    onChange={e => setPasswords({...passwords, confirm: e.target.value})} 
+                    style={{ width: '100%', padding: '10px 40px 10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(20, 20, 35, 0.6)' }} 
+                    required 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowModalPasswords(!showModalPasswords)}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.7 }}
+                    aria-label="Toggle password visibility"
+                  >
+                    {showModalPasswords ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>{saving ? 'Saving...' : 'Save Password'}</button>

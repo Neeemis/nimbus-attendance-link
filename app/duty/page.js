@@ -109,8 +109,22 @@ export default function DutyRoasterPage() {
                       style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                     />
                   </div>
-                  <span className="row-name" style={{ flex: 1, textAlign: 'left', fontWeight: 600 }}>
-                    {s.name} <span style={{ color: '#0056b3', marginLeft: '6px', fontSize: '0.9em' }}>[{s.roll_number}]</span>
+                  <span className="row-name" style={{ flex: 1, textAlign: 'left', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span>{s.name}</span>
+                    <span style={{ color: '#0056b3', fontSize: '0.9em' }}>[{s.roll_number}]</span>
+                    {s.extension_cancelled && (
+                      <span style={{
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        color: '#ef4444',
+                        border: '1px solid rgba(239, 68, 68, 0.35)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700
+                      }}>
+                        ⛔ Ext. Cancelled
+                      </span>
+                    )}
                   </span>
                   <span className={`row-status ${dutySet.has(s.id) ? 'present' : ''}`}>
                     {dutySet.has(s.id) ? 'ON DUTY' : '-'}

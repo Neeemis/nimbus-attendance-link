@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { verifyAuth, getTargetUserId } from '@/lib/auth';
+import { ensureExtensionSchema } from '@/lib/schema';
 
 export async function POST(request) {
   const user = verifyAuth(request);
@@ -66,11 +67,13 @@ export async function GET(request) {
     const isGlobal = searchParams.get('global') === 'true';
     if (!date) return NextResponse.json({ error: 'Date required' }, { status: 400 });
 
+    await ensureExtensionSchema();
     let rows;
     if (isGlobal) {
       // GLOBAL VIEW: All students on duty today
       rows = await sql`
         SELECT s.id, s.name, s.roll_number,
+               COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,
                TRUE as on_duty
         FROM students s
         JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
@@ -80,6 +83,7 @@ export async function GET(request) {
       // Management View for Admin (Sees all students)
       rows = await sql`
         SELECT s.id, s.name, s.roll_number,
+               COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,
                CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
         FROM students s
         LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
@@ -89,6 +93,7 @@ export async function GET(request) {
       // Management View for Discipline Officer (ONLY their assigned students)
       rows = await sql`
         SELECT s.id, s.name, s.roll_number,
+               COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,
                CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
         FROM students s
         LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date
@@ -100,6 +105,7 @@ export async function GET(request) {
       const targetUserId = getTargetUserId(user, searchParams);
       rows = await sql`
         SELECT s.id, s.name, s.roll_number,
+               COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,
                CASE WHEN d.id IS NOT NULL THEN TRUE ELSE FALSE END as on_duty
         FROM students s
         LEFT JOIN duty_roaster d ON s.id = d.student_id AND d.date = ${date}::date

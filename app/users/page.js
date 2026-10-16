@@ -12,6 +12,7 @@ export default function UserManagementPage() {
   // Form State
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [user, setUser] = useState({});
 
@@ -157,15 +158,35 @@ export default function UserManagementPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Password {editingId && '(Leave blank to keep current)'}</label>
-                <input 
-                  type="password" 
-                  name="password" 
-                  value={formData.password} 
-                  onChange={handleInputChange} 
-                  placeholder="••••••••"
-                  required={!editingId}
-                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ margin: 0 }}>Password {editingId && '(Leave blank to keep current)'}</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    {showPassword ? '🙈 Hide' : '👁️ Show'}
+                  </button>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    name="password" 
+                    value={formData.password} 
+                    onChange={handleInputChange} 
+                    placeholder="••••••••"
+                    style={{ paddingRight: '40px' }}
+                    required={!editingId}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', opacity: 0.7 }}
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button type="submit" className="btn btn-primary">Save User</button>

@@ -128,6 +128,18 @@ export default function StudentsPage() {
           <div className={`alert alert-${message.type}`}>{message.text}</div>
         )}
 
+        {students.some(s => s.extension_cancelled) && (
+          <div className="alert alert-error fade-in" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', borderRadius: '12px', marginBottom: '24px' }}>
+            <span style={{ fontSize: '1.6rem' }}>⛔</span>
+            <div style={{ flex: 1 }}>
+              <strong style={{ fontSize: '1rem' }}>Late-Night Extension Notice:</strong>
+              <p style={{ margin: '4px 0 0', fontSize: '0.9rem', color: '#fca5a5' }}>
+                {students.filter(s => s.extension_cancelled).length} student(s) in your club have had their extension <strong>CANCELLED</strong> by Faculty / Discipline. They are not permitted late-night campus hours.
+              </p>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleAdd} className="add-student-form glass-card">
           <h2>➕ Add New Student</h2>
           <div className="add-student-row">
@@ -170,7 +182,14 @@ export default function StudentsPage() {
         ) : (
           <div className="students-list">
             {students.map((student, index) => (
-              <div key={student.id} className="student-card glass-card">
+              <div 
+                key={student.id} 
+                className="student-card glass-card"
+                style={{
+                  borderLeft: student.extension_cancelled ? '4px solid #ef4444' : undefined,
+                  background: student.extension_cancelled ? 'rgba(239, 68, 68, 0.04)' : undefined
+                }}
+              >
                 <span className="student-number">{index + 1}</span>
                 {editingId === student.id ? (
                   <div className="student-edit-row">
@@ -203,11 +222,32 @@ export default function StudentsPage() {
                 ) : (
                   <>
                     <div className="student-info" style={{ flex: 1, paddingLeft: '1rem', textAlign: 'left' }}>
-                      <div className="student-name">
-                        {student.name} {student.roll_number && <span style={{ color: '#0056b3', marginLeft: '8px', fontSize: '0.9em' }}>[{student.roll_number}]</span>}
+                      <div className="student-name" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span>{student.name}</span>
+                        {student.roll_number && <span style={{ color: '#0056b3', fontSize: '0.9em' }}>[{student.roll_number}]</span>}
+                        {student.extension_cancelled && (
+                          <span style={{
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            color: '#ef4444',
+                            border: '1px solid rgba(239, 68, 68, 0.35)',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            letterSpacing: '0.3px'
+                          }}>
+                            ⛔ EXTENSION CANCELLED
+                          </span>
+                        )}
                       </div>
                       <div className="student-meta" style={{ fontSize: '0.85em', color: '#666', marginTop: '4px' }}>
                         {student.gender ? `${student.gender} | ${student.hostel}` : 'No details'}
+                        {student.extension_cancelled && (
+                          <span style={{ color: '#ef4444', marginLeft: '10px', fontWeight: '600' }}>
+                            • Cancelled by: {student.extension_cancelled_by || 'Discipline/Faculty'}
+                            {student.extension_cancelled_reason ? ` ("${student.extension_cancelled_reason}")` : ''}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="student-actions">
@@ -215,7 +255,7 @@ export default function StudentsPage() {
                       <button className="btn-icon btn-delete" onClick={() => handleDelete(student.id, student.name)} title="Delete">🗑️</button>
                     </div>
                   </>
-                    )}
+                )}
               </div>
             ))}
           </div>

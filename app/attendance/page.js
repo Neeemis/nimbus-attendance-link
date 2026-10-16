@@ -154,6 +154,15 @@ function AttendanceContent() {
         </div>
       </div>
 
+      {students.some(s => s.extension_cancelled) && (
+        <div className="alert alert-error fade-in" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', borderRadius: '12px', margin: '20px 0' }}>
+          <span style={{ fontSize: '1.4rem' }}>⛔</span>
+          <div style={{ flex: 1, fontSize: '0.9rem' }}>
+            <strong>Late Extension Alert:</strong> {students.filter(s => s.extension_cancelled).length} student(s) in this list have their late-night extension cancelled by Faculty / Discipline.
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="loading-state"><span className="spinner"></span> Loading...</div>
       ) : students.length === 0 ? (
@@ -168,10 +177,25 @@ function AttendanceContent() {
                 key={student.id}
                 className={`attendance-row ${attendance[student.id] ? 'marked-present' : 'marked-absent'} ${locked ? 'locked' : ''}`}
                 onClick={() => toggleAttendance(student.id)}
+                style={{ borderLeft: student.extension_cancelled ? '4px solid #ef4444' : undefined }}
               >
                 <span className="row-number">{index + 1}</span>
-                <span className="row-name" style={{ flex: 1, textAlign: 'left' }}>
-                  {student.name} {student.roll_number ? <span style={{ color: '#0056b3', marginLeft: '6px', fontSize: '0.9em' }}>[{student.roll_number}]</span> : ''}
+                <span className="row-name" style={{ flex: 1, textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>{student.name}</span>
+                  {student.roll_number ? <span style={{ color: '#0056b3', fontSize: '0.9em' }}>[{student.roll_number}]</span> : ''}
+                  {student.extension_cancelled && (
+                    <span style={{
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      color: '#ef4444',
+                      border: '1px solid rgba(239, 68, 68, 0.35)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700
+                    }}>
+                      ⛔ Ext. Cancelled
+                    </span>
+                  )}
                 </span>
                 <div className={`toggle-switch ${attendance[student.id] ? 'on' : 'off'}`}>
                   <div className="toggle-knob"></div>

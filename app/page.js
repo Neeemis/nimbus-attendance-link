@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [loadingReport, setLoadingReport] = useState(false);
   const [filterYear, setFilterYear] = useState('');
   const [users, setUsers] = useState([]);
+  const [cancelledStudents, setCancelledStudents] = useState([]);
   
   const pathname = usePathname();
   const [user, setUser] = useState({});
@@ -45,11 +46,21 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const fetchCancelledStudents = async () => {
+    try {
+      const { data } = await api.get('/students');
+      setCancelledStudents(data.filter(s => s.extension_cancelled));
+    } catch (err) {
+      console.error('Failed to load students for extension check:', err);
+    }
+  };
+
   useEffect(() => {
     if (!user.id) return;
     fetchStats();
     fetchDates();
     fetchDuty(dutyDate);
+    fetchCancelledStudents();
     if (user.role === 'admin') {
       fetchUsers();
     }
@@ -155,6 +166,36 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+ 
+        {cancelledStudents.length > 0 && (
+          <div className="alert alert-error fade-in" style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '16px 20px', borderRadius: '14px', marginBottom: '24px' }}>
+            <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>⛔</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '4px' }}>
+                Late-Night Extension Notice:
+              </div>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#fca5a5' }}>
+                {cancelledStudents.length} student(s) in your club have had their late-night extension <strong>CANCELLED</strong> by Faculty / Discipline. They are not permitted late-night campus hours:
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                {cancelledStudents.map(s => (
+                  <span key={s.id} style={{
+                    background: 'rgba(239, 68, 68, 0.25)',
+                    border: '1px solid rgba(239, 68, 68, 0.5)',
+                    color: '#fff',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    fontSize: '0.85rem',
+                    fontWeight: 600
+                  }}>
+                    {s.name} {s.roll_number ? `[${s.roll_number}]` : ''}
+                    {s.extension_cancelled_by ? ` (by ${s.extension_cancelled_by.split(' ')[0]})` : ''}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="stats-grid">
           <div className="stat-card stat-blue">
