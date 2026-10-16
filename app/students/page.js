@@ -134,7 +134,7 @@ export default function StudentsPage() {
             <div style={{ flex: 1 }}>
               <strong style={{ fontSize: '1rem' }}>Late-Night Extension Notice:</strong>
               <p style={{ margin: '4px 0 0', fontSize: '0.9rem', color: '#fca5a5' }}>
-                {students.filter(s => s.extension_cancelled).length} student(s) in your club have had their extension <strong>CANCELLED</strong> by Faculty / Discipline. They are not permitted late-night campus hours.
+                {students.filter(s => s.extension_cancelled).length} student(s) in your club have had their extension <strong>CANCELLED</strong> by Faculty Incharge. They are not permitted late-night campus hours.
               </p>
             </div>
           </div>
@@ -244,7 +244,7 @@ export default function StudentsPage() {
                         {student.gender ? `${student.gender} | ${student.hostel}` : 'No details'}
                         {student.extension_cancelled && (
                           <span style={{ color: '#ef4444', marginLeft: '10px', fontWeight: '600' }}>
-                            • Cancelled by: {student.extension_cancelled_by || 'Discipline/Faculty'}
+                            • Cancelled by: {student.extension_cancelled_by || 'Faculty Incharge'}
                             {student.extension_cancelled_reason ? ` ("${student.extension_cancelled_reason}")` : ''}
                           </span>
                         )}

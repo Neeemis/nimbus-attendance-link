@@ -104,7 +104,9 @@ export default function DisciplinePage() {
   const inCampusCount = filteredStudents.filter((s) => s.campus_status === 'in').length;
   const outCampusCount = totalGirls - inCampusCount;
   const cancelledExtensionsCount = filteredStudents.filter((s) => s.extension_cancelled).length;
-  const canModifyExtension = user.role === 'admin' || user.email?.startsWith('discipline@') || user.email?.startsWith('faculty@');
+  const isFaculty = user.role === 'faculty' || user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com';
+  const isAdmin = user.role === 'admin';
+  const canModifyExtension = isFaculty || isAdmin;
 
   const GIRLS_HOSTELS = ['Ambika Girls Hostel', 'Satpura Girls Hostel', 'Parvati Girls Hostel'];
   
@@ -265,11 +267,11 @@ export default function DisciplinePage() {
                         </span>
                         {student.extension_cancelled && (
                           <span style={{ fontSize: '0.68rem', color: '#f87171', textAlign: 'center', maxWidth: '200px', lineHeight: 1.2 }}>
-                            By: {student.extension_cancelled_by || 'Faculty/Discipline'}
+                            By: {student.extension_cancelled_by || 'Faculty Incharge'}
                             {student.extension_cancelled_reason ? ` (${student.extension_cancelled_reason})` : ''}
                           </span>
                         )}
-                        {canModifyExtension && (
+                        {canModifyExtension ? (
                           <button 
                             className="btn btn-sm"
                             disabled={actionLoading === student.id}
@@ -286,6 +288,10 @@ export default function DisciplinePage() {
                           >
                             {actionLoading === student.id ? 'Updating...' : (student.extension_cancelled ? 'Reinstate Ext.' : 'Cancel Ext.')}
                           </button>
+                        ) : (
+                          <span style={{ fontSize: '0.68rem', color: '#94a3b8', fontStyle: 'italic', marginTop: '2px' }}>
+                            Faculty Action Only
+                          </span>
                         )}
                       </div>
 

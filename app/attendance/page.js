@@ -158,7 +158,7 @@ function AttendanceContent() {
         <div className="alert alert-error fade-in" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', borderRadius: '12px', margin: '20px 0' }}>
           <span style={{ fontSize: '1.4rem' }}>⛔</span>
           <div style={{ flex: 1, fontSize: '0.9rem' }}>
-            <strong>Late Extension Alert:</strong> {students.filter(s => s.extension_cancelled).length} student(s) in this list have their late-night extension cancelled by Faculty / Discipline.
+            <strong>Late Extension Alert:</strong> {students.filter(s => s.extension_cancelled).length} student(s) in this list have their late-night extension cancelled by Faculty Incharge.
           </div>
         </div>
       )}

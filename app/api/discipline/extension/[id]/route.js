@@ -7,13 +7,12 @@ export async function PUT(request, { params }) {
   const user = verifyAuth(request);
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
 
-  const isDiscipline = user.email?.startsWith('discipline@') || user.email === 'discipline@nimbus.com';
-  const isFaculty = user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com';
+  const isFaculty = user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com' || user.role === 'faculty';
   const isAdmin = user.role === 'admin';
 
-  if (!isDiscipline && !isFaculty && !isAdmin) {
+  if (!isFaculty && !isAdmin) {
     return NextResponse.json({ 
-      error: 'Access denied. Only Faculty and Discipline Officers can modify extension permissions.' 
+      error: 'Access denied. Late-night extensions can only be cancelled or reinstated by Faculty Incharge.' 
     }, { status: 403 });
   }
 

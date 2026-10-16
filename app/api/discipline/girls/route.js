@@ -8,7 +8,7 @@ export async function GET(request) {
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
 
   const isDiscipline = user.email?.startsWith('discipline@') || user.email === 'discipline@nimbus.com';
-  const isFaculty = user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com';
+  const isFaculty = user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com' || user.role === 'faculty';
   const isAdmin = user.role === 'admin';
 
   if (!isDiscipline && !isFaculty && !isAdmin) {
@@ -21,7 +21,7 @@ export async function GET(request) {
     await ensureExtensionSchema();
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     let rows;
-    if (user.role === 'admin') {
+    if (isAdmin || isFaculty) {
       rows = await sql`
         SELECT s.id, s.name, s.roll_number, s.gender, s.hostel, s.campus_status, u.name as club_name,
                COALESCE(s.extension_cancelled, FALSE) as extension_cancelled,

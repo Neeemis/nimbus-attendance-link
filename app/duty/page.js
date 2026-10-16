@@ -24,6 +24,7 @@ export default function DutyRoasterPage() {
       setDutySet(onDuty);
     } catch (err) {
       console.error('Duty fetch error:', err);
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to load discipline duty roster.' });
     } finally {
       setLoading(false);
     }
@@ -40,9 +41,9 @@ export default function DutyRoasterPage() {
     setMessage({ type: '', text: '' });
     try {
       await api.post('/duty', { date, studentIds: Array.from(dutySet) });
-      setMessage({ type: 'success', text: 'Duty roaster updated successfully!' });
+      setMessage({ type: 'success', text: 'Discipline duty roaster updated successfully!' });
     } catch (err) {
-      setMessage({ type: 'error', text: 'Save failed.' });
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Save failed.' });
     }
   };
 
@@ -51,7 +52,7 @@ export default function DutyRoasterPage() {
       <div className="attendance-page">
         <div className="page-header">
           <h1>📋 Duty Roaster</h1>
-          <p className="subtitle">Choose students for Today's on-duty list</p>
+          <p className="subtitle">Assign duties to Discipline Club members for today</p>
         </div>
 
         <div className="attendance-controls glass-card">
@@ -91,7 +92,7 @@ export default function DutyRoasterPage() {
               <span>Status</span>
             </div>
             {students.length === 0 ? (
-              <p style={{ padding: '20px', textAlign: 'center' }}>No students found in your group.</p>
+              <p style={{ padding: '20px', textAlign: 'center' }}>No Discipline Club members found.</p>
             ) : (
               students.map((s, idx) => (
                 <div 

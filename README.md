@@ -6,20 +6,20 @@
 
 ## ✨ Key Features
 
-### 🏢 Campus Status Tracker
-- **Real-time Monitoring**: Instant tracking of students' "Inside" or "Outside" status.
-- **Girls' Hostel Focus**: Specialized management for **Ambika**, **Satpura**, and **Parvati** hostels.
-- **Mobile Optimized**: Enlarged touch targets and reactive focus animations for quick field marking.
+### 🏢 Campus Status & Extension Tracker
+- **Real-time Monitoring**: Instant tracking of students' "Inside" or "Outside" campus status with hostel filters.
+- **Faculty-Controlled Late Extensions**: Late-night campus extensions can strictly **only be cancelled or reinstated by Faculty Incharge** (and Admin).
+- **Club & Discipline Visibility**: Clubs and Discipline officers receive real-time notifications, warnings, and cancellation reasons whenever an extension is revoked.
 
 ### 📋 Duty Roaster Management
-- **Individual Assignment**: Assign duty statuses to specific student groups.
+- **Discipline Squad Deployment**: Duty assignments are strictly scoped to **members of the Discipline Club**.
+- **Dual Authority**: Managed exclusively by the **Discipline Club** and **Faculty Incharge** (plus Admin).
 - **Conflict Prevention**: Unique date-based assignment tracking to avoid double-booking.
-- **Scoped Visibility**: Users only see students relevant to their assigned scope.
 
-### 📊 Admin Control Center
+### 🔐 Security & Access Control
+- **Flexible Domain Login**: Login seamlessly with `@hillfair.com`, `@nimbus.com`, or username.
+- **Password Visibility**: Convenient toggle to show/hide passwords on login, password change modal, and user management.
 - **Impersonation Mode**: Admins can view and manage data as any faculty member.
-- **Global Reporting**: Comprehensive attendance views and data management tools.
-- **Secure Authentication**: JWT-based security with managed user roles.
 
 ### 💎 Premium Experience
 - **Glassmorphic UI**: Beautiful dark-mode interface with frosted glass effects and smooth transitions.

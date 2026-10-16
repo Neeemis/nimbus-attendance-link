@@ -84,7 +84,7 @@ export default function Navbar() {
           <Link href="/" className={navLinkClass('/')} onClick={() => setMobileOpen(false)}>
             <span className="nav-icon">📊</span> Dashboard
           </Link>
-          {!(user.email?.startsWith('faculty@')) && (
+          {!(user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com' || user.role === 'faculty') && (
             <>
               <Link href="/attendance" className={navLinkClass('/attendance')} onClick={() => setMobileOpen(false)}>
                 <span className="nav-icon">✅</span> Attendance
@@ -94,12 +94,12 @@ export default function Navbar() {
               </Link>
             </>
           )}
-          {user.role === 'admin' && !(user.email?.startsWith('discipline@')) && (
+          {user.role === 'admin' && !(user.email?.startsWith('discipline@') || user.email === 'discipline@nimbus.com') && (
             <Link href="/users" className={navLinkClass('/users')} onClick={() => setMobileOpen(false)}>
               <span className="nav-icon">⚙️</span> Users
             </Link>
           )}
-          {(user.role === 'admin' || user.email?.startsWith('discipline@') || user.email?.startsWith('faculty@')) && (
+          {(user.role === 'admin' || user.email?.startsWith('discipline@') || user.email === 'discipline@nimbus.com' || user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com' || user.role === 'faculty') && (
             <>
               <Link href="/discipline" className={navLinkClass('/discipline')} onClick={() => setMobileOpen(false)}>
                 <span className="nav-icon">🛡️</span> Status

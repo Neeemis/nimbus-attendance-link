@@ -175,7 +175,7 @@ export default function DashboardPage() {
                 Late-Night Extension Notice:
               </div>
               <p style={{ margin: 0, fontSize: '0.9rem', color: '#fca5a5' }}>
-                {cancelledStudents.length} student(s) in your club have had their late-night extension <strong>CANCELLED</strong> by Faculty / Discipline. They are not permitted late-night campus hours:
+                {cancelledStudents.length} student(s) in your club have had their late-night extension <strong>CANCELLED</strong> by Faculty Incharge. They are not permitted late-night campus hours:
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
                 {cancelledStudents.map(s => (
@@ -234,7 +234,7 @@ export default function DashboardPage() {
               🛡️ Student Duty List {dutyDate === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) ? '(Today)' : `(${dutyDate})`}
             </h2>
             
-            {(user.role === 'admin' || user.email === 'faculty@nimbus.com') && (
+            {(user.role === 'admin' || user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com' || user.role === 'faculty') && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>Check Past Duty:</label>
                 <input 
