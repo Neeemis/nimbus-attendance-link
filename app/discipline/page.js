@@ -104,7 +104,7 @@ export default function DisciplinePage() {
   const inCampusCount = filteredStudents.filter((s) => s.campus_status === 'in').length;
   const outCampusCount = totalGirls - inCampusCount;
   const cancelledExtensionsCount = filteredStudents.filter((s) => s.extension_cancelled).length;
-  const canModifyExtension = user.role === 'admin' || user.email === 'discipline@nimbus.com' || user.email === 'faculty@nimbus.com';
+  const canModifyExtension = user.role === 'admin' || user.email?.startsWith('discipline@') || user.email?.startsWith('faculty@');
 
   const GIRLS_HOSTELS = ['Ambika Girls Hostel', 'Satpura Girls Hostel', 'Parvati Girls Hostel'];
   
@@ -126,8 +126,8 @@ export default function DisciplinePage() {
       <div className="students-page fade-in">
         <div className="page-header sticky-header">
           <div>
-            <h1>🛡️ Campus Status Tracker</h1>
-            <p className="subtitle">Manage student status and duty roaster for today</p>
+            <h1>🛡️ Campus Extension Tracker</h1>
+            <p className="subtitle">Manage campus status, late-night extensions, and duty assignments</p>
           </div>
           <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <div className="date-picker-mini glass-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', marginBottom: 0 }}>
@@ -294,7 +294,7 @@ export default function DisciplinePage() {
                         <span className={`row-status ${isIn ? 'present' : 'absent'}`} style={{ minWidth: '80px', textAlign: 'center' }}>
                           {isIn ? 'Inside' : 'Outside'}
                         </span>
-                        {user.email !== 'faculty@nimbus.com' && (
+                        {!user.email?.startsWith('faculty@') && (
                           <button 
                             className={`btn btn-sm ${isIn ? 'btn-outline' : 'btn-primary'}`} 
                             onClick={() => handleToggleStatus(student.id, student.campus_status)}

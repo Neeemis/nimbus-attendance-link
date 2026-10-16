@@ -7,7 +7,11 @@ export async function GET(request) {
   const user = verifyAuth(request);
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
 
-  if (user.email !== 'discipline@nimbus.com' && user.email !== 'faculty@nimbus.com' && user.role !== 'admin') {
+  const isDiscipline = user.email?.startsWith('discipline@') || user.email === 'discipline@nimbus.com';
+  const isFaculty = user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com';
+  const isAdmin = user.role === 'admin';
+
+  if (!isDiscipline && !isFaculty && !isAdmin) {
     return NextResponse.json({ 
       error: `Access denied. Your account (${user.email}, ${user.role}) does not have discipline access.` 
     }, { status: 403 });

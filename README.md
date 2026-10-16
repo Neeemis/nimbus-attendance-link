@@ -1,6 +1,6 @@
-# 🛡️ NAP: NIMBUS ATTENDANCE PORTAL
+# 🛡️ EXTENSION TRACKER
 
-**NAP** is a high-performance, secure, and modern attendance management system designed for **NIMBUS**. It provides streamlined tracking of student campus status, duty assignments, and role-based access for administrators, faculty, and discipline officers.
+**Extension Tracker** is a high-performance, secure, and modern campus permission and attendance management system. It provides real-time tracking of late-night extensions, student campus status, duty roaster assignments, and role-based access for administrators, faculty, discipline officers, and club coordinators.
 
 ---
 

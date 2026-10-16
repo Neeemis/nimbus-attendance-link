@@ -7,8 +7,11 @@ export async function PUT(request, { params }) {
   const user = verifyAuth(request);
   if (!user) return NextResponse.json({ error: 'No token, authorization denied' }, { status: 401 });
 
-  // Only Faculty, Discipline Officer, or Admins can cancel or reinstate extensions
-  if (user.email !== 'discipline@nimbus.com' && user.email !== 'faculty@nimbus.com' && user.role !== 'admin') {
+  const isDiscipline = user.email?.startsWith('discipline@') || user.email === 'discipline@nimbus.com';
+  const isFaculty = user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com';
+  const isAdmin = user.role === 'admin';
+
+  if (!isDiscipline && !isFaculty && !isAdmin) {
     return NextResponse.json({ 
       error: 'Access denied. Only Faculty and Discipline Officers can modify extension permissions.' 
     }, { status: 403 });

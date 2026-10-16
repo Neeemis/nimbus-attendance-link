@@ -14,7 +14,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
     }
 
-    const [user] = await sql`SELECT * FROM users WHERE email = ${cleanEmail}`;
+    const username = cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail;
+
+    const [user] = await sql`
+      SELECT * FROM users 
+      WHERE LOWER(email) = ${cleanEmail}
+         OR LOWER(email) = ${username + '@nimbus.com'}
+         OR LOWER(email) = ${username + '@hillfair.com'}
+         OR LOWER(SPLIT_PART(email, '@', 1)) = ${username}
+      LIMIT 1
+    `;
     if (!user) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }

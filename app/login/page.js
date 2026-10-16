@@ -49,10 +49,10 @@ export default function LoginPage() {
       <div className="login-card">
         <div className="login-header">
           <div className="login-logo-container">
-            <img src="/logo.svg" alt="Nimbus Logo" className="login-logo-img" />
+            <img src="/logo.svg" alt="Extension Tracker" className="login-logo-img" />
           </div>
-          <h1>NIMBUS ATTENDANCE</h1>
-          <p>Portal Access</p>
+          <h1>EXTENSION TRACKER</h1>
+          <p>Campus Status & Extension Portal</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
           {error && <div className="alert alert-error">{error}</div>}
@@ -60,10 +60,10 @@ export default function LoginPage() {
             <label htmlFor="email">Email Address</label>
             <input
               id="email"
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@nimbus.com"
+              placeholder="e.g. admin@hillfair.com or admin@nimbus.com"
               required
               autoFocus
             />

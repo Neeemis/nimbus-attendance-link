@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'NIMBUS ATTENDANCE APP',
-  description: 'Modern Attendance Management System',
+  title: 'Extension Tracker',
+  description: 'Campus Status, Late-Night Extension & Duty Tracker',
 };
 
 export default function RootLayout({ children }) {
