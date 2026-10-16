@@ -11,54 +11,140 @@ export async function GET(request) {
     });
   }
 
-  if (user.role !== 'admin') {
-    return new Response(JSON.stringify({ error: 'Access denied. Admin role required.' }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userIdParam = searchParams.get('userId');
+    const dateParam = searchParams.get('date');
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
 
-    let rows;
-    if (userId && userId !== 'null' && userId !== '') {
-      rows = await sql`
-        SELECT s.name as student_name, u.name as instructor_name, COUNT(a.id) as total_days,
-               SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days,
-               SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_days
-        FROM students s
-        JOIN users u ON s.user_id = u.id
-        LEFT JOIN attendance a ON s.id = a.student_id
-        WHERE s.user_id = ${userId}
-        GROUP BY s.id, s.name, u.name
-        ORDER BY u.name, s.name
-      `;
+    // Role-based target user scoping
+    const isFaculty = user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com' || user.role === 'faculty';
+    const isAdmin = user.role === 'admin';
+
+    let targetUserId = null;
+    if (isAdmin || isFaculty) {
+      if (userIdParam && userIdParam !== 'null' && userIdParam !== 'all' && userIdParam !== '') {
+        targetUserId = parseInt(userIdParam, 10);
+      }
     } else {
-      rows = await sql`
-        SELECT s.name as student_name, u.name as instructor_name, COUNT(a.id) as total_days,
-               SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days,
-               SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_days
-        FROM students s
-        JOIN users u ON s.user_id = u.id
-        LEFT JOIN attendance a ON s.id = a.student_id
-        GROUP BY s.id, s.name, u.name
-        ORDER BY u.name, s.name
-      `;
+      // Regular club coordinators can only export their own section
+      targetUserId = user.id;
     }
 
-    let totalDates = 0;
-    if (userId && userId !== 'null' && userId !== '') {
-      const [row] = await sql`
-        SELECT COUNT(DISTINCT a.date) as total_dates 
-        FROM attendance a JOIN students s ON a.student_id = s.id 
-        WHERE s.user_id = ${userId}
-      `;
-      totalDates = row?.total_dates || 0;
+    let isSpan = false;
+    let startDate = dateParam || startDateParam;
+    let endDate = dateParam || endDateParam || startDate;
+
+    if (startDateParam && endDateParam && startDateParam !== endDateParam) {
+      isSpan = true;
+      startDate = startDateParam;
+      endDate = endDateParam;
+    } else if (dateParam) {
+      startDate = dateParam;
+      endDate = dateParam;
+    }
+
+    let rows;
+    if (isSpan) {
+      if (targetUserId) {
+        rows = await sql`
+          SELECT s.name as student_name, s.roll_number, u.name as instructor_name,
+                 COUNT(DISTINCT a.date) as total_days,
+                 SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days,
+                 SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_days
+          FROM students s
+          JOIN users u ON s.user_id = u.id
+          LEFT JOIN attendance a ON s.id = a.student_id AND a.date >= ${startDate}::date AND a.date <= ${endDate}::date
+          WHERE s.user_id = ${targetUserId}
+          GROUP BY s.id, s.name, s.roll_number, u.name
+          ORDER BY u.name, s.roll_number ASC, s.name ASC
+        `;
+      } else {
+        rows = await sql`
+          SELECT s.name as student_name, s.roll_number, u.name as instructor_name,
+                 COUNT(DISTINCT a.date) as total_days,
+                 SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days,
+                 SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_days
+          FROM students s
+          JOIN users u ON s.user_id = u.id
+          LEFT JOIN attendance a ON s.id = a.student_id AND a.date >= ${startDate}::date AND a.date <= ${endDate}::date
+          GROUP BY s.id, s.name, s.roll_number, u.name
+          ORDER BY u.name, s.roll_number ASC, s.name ASC
+        `;
+      }
+    } else if (startDate) {
+      // Single Date
+      if (targetUserId) {
+        rows = await sql`
+          SELECT s.name as student_name, s.roll_number, u.name as instructor_name,
+                 1 as total_days,
+                 SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days,
+                 SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_days
+          FROM students s
+          JOIN users u ON s.user_id = u.id
+          LEFT JOIN attendance a ON s.id = a.student_id AND a.date = ${startDate}::date
+          WHERE s.user_id = ${targetUserId}
+          GROUP BY s.id, s.name, s.roll_number, u.name
+          ORDER BY u.name, s.roll_number ASC, s.name ASC
+        `;
+      } else {
+        rows = await sql`
+          SELECT s.name as student_name, s.roll_number, u.name as instructor_name,
+                 1 as total_days,
+                 SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days,
+                 SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_days
+          FROM students s
+          JOIN users u ON s.user_id = u.id
+          LEFT JOIN attendance a ON s.id = a.student_id AND a.date = ${startDate}::date
+          GROUP BY s.id, s.name, s.roll_number, u.name
+          ORDER BY u.name, s.roll_number ASC, s.name ASC
+        `;
+      }
     } else {
-      const [row] = await sql`SELECT COUNT(DISTINCT date) as total_dates FROM attendance`;
-      totalDates = row?.total_dates || 0;
+      // All-time
+      if (targetUserId) {
+        rows = await sql`
+          SELECT s.name as student_name, s.roll_number, u.name as instructor_name,
+                 COUNT(DISTINCT a.date) as total_days,
+                 SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days,
+                 SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_days
+          FROM students s
+          JOIN users u ON s.user_id = u.id
+          LEFT JOIN attendance a ON s.id = a.student_id
+          WHERE s.user_id = ${targetUserId}
+          GROUP BY s.id, s.name, s.roll_number, u.name
+          ORDER BY u.name, s.roll_number ASC, s.name ASC
+        `;
+      } else {
+        rows = await sql`
+          SELECT s.name as student_name, s.roll_number, u.name as instructor_name,
+                 COUNT(DISTINCT a.date) as total_days,
+                 SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_days,
+                 SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_days
+          FROM students s
+          JOIN users u ON s.user_id = u.id
+          LEFT JOIN attendance a ON s.id = a.student_id
+          GROUP BY s.id, s.name, s.roll_number, u.name
+          ORDER BY u.name, s.roll_number ASC, s.name ASC
+        `;
+      }
+    }
+
+    // Calculate Distinct Dates Logged in that window
+    let totalDates = 0;
+    if (isSpan) {
+      const [r] = targetUserId
+        ? await sql`SELECT COUNT(DISTINCT a.date) as total_dates FROM attendance a JOIN students s ON a.student_id = s.id WHERE s.user_id = ${targetUserId} AND a.date >= ${startDate}::date AND a.date <= ${endDate}::date`
+        : await sql`SELECT COUNT(DISTINCT date) as total_dates FROM attendance WHERE date >= ${startDate}::date AND date <= ${endDate}::date`;
+      totalDates = r?.total_dates || 0;
+    } else if (startDate) {
+      totalDates = 1;
+    } else {
+      const [r] = targetUserId
+        ? await sql`SELECT COUNT(DISTINCT a.date) as total_dates FROM attendance a JOIN students s ON a.student_id = s.id WHERE s.user_id = ${targetUserId}`
+        : await sql`SELECT COUNT(DISTINCT date) as total_dates FROM attendance`;
+      totalDates = r?.total_dates || 0;
     }
 
     // Create PDF
@@ -71,24 +157,31 @@ export async function GET(request) {
       doc.on('error', reject);
     });
 
-    const reportTitle = userId && rows.length > 0 ? `Attendance Report: ${rows[0].instructor_name}` : (userId ? `Instructor Attendance Report` : `Global Attendance Report`);
+    const reportTitle = targetUserId && rows.length > 0 
+      ? `Attendance Report: ${rows[0].instructor_name}` 
+      : (targetUserId ? `Section Attendance Report` : `Global Attendance Report`);
 
     // --- Header Section ---
-    doc.fontSize(22).font('Helvetica-Bold').fillColor('#1e3a8a').text('NIMBUS ATTENDANCE PORTAL', { align: 'center' });
+    doc.fontSize(22).font('Helvetica-Bold').fillColor('#1e3a8a').text('EXTENSION TRACKER', { align: 'center' });
     doc.moveDown(0.2);
-    doc.fontSize(14).font('Helvetica-Bold').fillColor('#475569').text(reportTitle, { align: 'center' });
+    doc.fontSize(14).font('Helvetica-Bold').fillColor('#2563eb').text(reportTitle, { align: 'center' });
     doc.moveDown(0.3);
-    doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(`Report Generated On: ${new Date().toLocaleDateString('en-IN')}`, { align: 'center' });
-    doc.fontSize(10).text(`Total Class Sessions Logged: ${totalDates}`, { align: 'center' });
+
+    const spanInfo = isSpan 
+      ? `Selected Duration: ${new Date(startDate).toLocaleDateString('en-IN')} to ${new Date(endDate).toLocaleDateString('en-IN')}`
+      : (startDate ? `Date: ${new Date(startDate).toLocaleDateString('en-IN')}` : 'All-Time Cumulative Report');
+
+    doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(spanInfo, { align: 'center' });
+    doc.fontSize(9).text(`Report Generated: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST | Class Sessions in Period: ${totalDates}`, { align: 'center' });
     doc.moveDown(1.5);
 
     // --- Table Headers ---
     const tableTop = doc.y;
-    const colWidths = [25, 120, 120, 50, 50, 70, 80]; // Total 515 (A4 is 595, -80 margins = 515)
-    const headers = ['#', 'Student Name', 'Instructor', 'Pres.', 'Abs.', 'Days', 'Attend %'];
+    const colWidths = [25, 130, 80, 110, 45, 45, 40, 40]; // Total 515
+    const headers = ['#', 'Student Name', 'Roll No.', 'Club / Section', 'Pres.', 'Abs.', 'Days', '%'];
 
     doc.rect(40, tableTop - 5, 515, 22).fill('#2563eb');
-    doc.fillColor('#ffffff').fontSize(10).font('Helvetica-Bold');
+    doc.fillColor('#ffffff').fontSize(9).font('Helvetica-Bold');
 
     let x = 40;
     headers.forEach((header, i) => {
@@ -99,61 +192,81 @@ export async function GET(request) {
     doc.moveDown(1);
     doc.font('Helvetica').fontSize(9);
 
-    // --- Table Rows ---
-    rows.forEach((row, index) => {
-      const y = doc.y;
-      
-      // Zebra striping
-      if (index % 2 === 0) {
-        doc.rect(40, y - 2, 515, 18).fill('#f1f5f9');
-      }
-      
-      // REQUIRED: Reset color for every row text
-      doc.fillColor('#0f172a');
+    if (rows.length === 0) {
+      doc.moveDown(1.5);
+      doc.fillColor('#64748b').fontSize(11).text('No attendance records found for this period.', 40, doc.y, { align: 'center', width: 515 });
+    } else {
+      // --- Table Rows ---
+      rows.forEach((row, index) => {
+        if (doc.y > 740) {
+          doc.addPage();
+          doc.fillColor('#2563eb').rect(40, doc.y - 5, 515, 20).fill();
+          doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(9);
+          let headerX = 40;
+          headers.forEach((h, i) => {
+            doc.text(h, headerX + 4, doc.y, { width: colWidths[i], align: i === 0 ? 'center' : 'left' });
+            headerX += colWidths[i];
+          });
+          doc.moveDown(1).fillColor('#0f172a').font('Helvetica');
+        }
 
-      const totalDaysForStudent = parseInt(row.total_days || 0);
-      const presentDays = parseInt(row.present_days || 0);
-      const absentDays = parseInt(row.absent_days || 0);
-      const percentage = totalDaysForStudent > 0 ? ((presentDays / totalDaysForStudent) * 100).toFixed(1) : '0.0';
+        const y = doc.y;
+        if (index % 2 === 0) {
+          doc.rect(40, y - 2, 515, 18).fill('#f1f5f9');
+        }
+        
+        doc.fillColor('#0f172a');
 
-      let cx = 40;
-      const values = [(index+1).toString(), row.student_name, row.instructor_name, presentDays.toString(), absentDays.toString(), totalDaysForStudent.toString(), `${percentage}%`];
+        const totalDaysForStudent = parseInt(row.total_days || 0);
+        const presentDays = parseInt(row.present_days || 0);
+        const absentDays = parseInt(row.absent_days || 0);
+        const totalMarked = presentDays + absentDays;
+        const percentage = totalMarked > 0 ? ((presentDays / totalMarked) * 100).toFixed(0) : '0';
 
-      values.forEach((val, i) => {
-        doc.text(val || '-', cx + 4, y, { width: colWidths[i], align: i === 0 ? 'center' : 'left', lineBreak: false });
-        cx += colWidths[i];
-      });
+        let cx = 40;
+        const values = [
+          (index + 1).toString(),
+          row.student_name,
+          row.roll_number || '-',
+          row.instructor_name || '-',
+          presentDays.toString(),
+          absentDays.toString(),
+          totalDaysForStudent.toString(),
+          `${percentage}%`
+        ];
 
-      doc.moveDown(0.7);
-      
-      // Auto Page Break Logic
-      if (doc.y > 740) {
-        doc.addPage();
-        // Redraw table header on new page (Simplified without rect for speed)
-        doc.fillColor('#2563eb').rect(40, doc.y - 5, 515, 20).fill();
-        doc.fillColor('#ffffff').font('Helvetica-Bold');
-        let headerX = 40;
-        headers.forEach((h, i) => {
-          doc.text(h, headerX + 4, doc.y, { width: colWidths[i], align: i === 0 ? 'center' : 'left' });
-          headerX += colWidths[i];
+        values.forEach((val, i) => {
+          if (headers[i] === '%') {
+            doc.fillColor(parseInt(percentage) >= 75 ? '#16a34a' : (parseInt(percentage) >= 50 ? '#d97706' : '#dc2626'));
+          } else {
+            doc.fillColor('#0f172a');
+          }
+          doc.text(val || '-', cx + 4, y, { width: colWidths[i], align: i === 0 ? 'center' : 'left', lineBreak: false });
+          cx += colWidths[i];
         });
-        doc.moveDown(1).fillColor('#0f172a').font('Helvetica');
-      }
-    });
+
+        doc.moveDown(0.7);
+      });
+    }
 
     doc.end();
     const pdfBuffer = await pdfPromise;
+
+    const filename = isSpan 
+      ? `attendance_${startDate}_to_${endDate}.pdf` 
+      : (startDate ? `attendance_${startDate}.pdf` : `attendance_report.pdf`);
 
     return new Response(pdfBuffer, {
       status: 200,
       headers: { 
         'Content-Type': 'application/pdf', 
-        'Content-Disposition': 'attachment; filename="nimbus_attendance_report.pdf"' 
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'no-store, must-revalidate',
       },
     });
   } catch (err) {
     console.error('PDF report generation critical failure:', err);
-    return new Response(JSON.stringify({ error: 'Failed to generate report. Check database connectivity.' }), { 
+    return new Response(JSON.stringify({ error: 'Failed to generate report: ' + err.message }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });

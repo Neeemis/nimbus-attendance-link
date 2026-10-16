@@ -11,10 +11,19 @@
 - **Faculty-Controlled Late Extensions**: Late-night campus extensions can strictly **only be cancelled or reinstated by Faculty Incharge** (and Admin).
 - **Club & Discipline Visibility**: Clubs and Discipline officers receive real-time notifications, warnings, and cancellation reasons whenever an extension is revoked.
 
-### 📋 Duty Roaster Management
+### 📋 Duty Roaster & Day Inspection
+- **Inspect Any Day**: View and assign duty for any date (past, present, or future) with quick day navigation (`◀ Prev`, `Today`, `Next ▶`).
 - **Discipline Squad Deployment**: Duty assignments are strictly scoped to **members of the Discipline Club**.
 - **Dual Authority**: Managed exclusively by the **Discipline Club** and **Faculty Incharge** (plus Admin).
-- **Conflict Prevention**: Unique date-based assignment tracking to avoid double-booking.
+- **Day Duty PDF Export**: One-click download of the official duty roster PDF for any selected date.
+
+### 📅 Calendar Span Selection & Multi-Report Hub
+- **Interactive Calendar Span Selection**: Click and drag across dates on the FullCalendar to select custom duration windows.
+- **Duration PDF Exports**: Download targeted PDFs for any selected duration span:
+  - **Attendance Report PDF**: Aggregates sessions, present/absent counts, and percentage per student/club across the span.
+  - **Duty Roaster PDF**: Comprehensive list of all on-duty discipline deployments over the duration.
+  - **Campus Movement PDF**: Historical entry/exit movement logs across the period.
+- **Quick Span Presets**: One-click filters for `Today`, `Last 7 Days`, `Last 30 Days`, and `This Month`.
 
 ### 🔐 Security & Access Control
 - **Flexible Domain Login**: Login seamlessly with `@hillfair.com`, `@nimbus.com`, or username.

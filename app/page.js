@@ -35,8 +35,13 @@ export default function DashboardPage() {
   const [user, setUser] = useState({});
   const [targetUser, setTargetUser] = useState(null);
 
+  const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
   const [dutyStudents, setDutyStudents] = useState([]);
-  const [dutyDate, setDutyDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }));
+  const [dutyDate, setDutyDate] = useState(todayIST);
+
+  // 📅 Calendar Date Span Selection State
+  const [spanStart, setSpanStart] = useState(todayIST);
+  const [spanEnd, setSpanEnd] = useState(todayIST);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -107,6 +112,9 @@ export default function DashboardPage() {
   const handleDateClick = async (info) => {
     const date = info.dateStr;
     setSelectedDate(date);
+    setDutyDate(date);
+    setSpanStart(date);
+    setSpanEnd(date);
     try {
       const { data } = await api.get(`/attendance?date=${date}`);
       setDayRecords(data.records || []);
@@ -115,12 +123,67 @@ export default function DashboardPage() {
     }
   };
 
+  // 📅 Interactive Calendar Span Drag Selection
+  const handleCalendarSpanSelect = (selectInfo) => {
+    const startStr = selectInfo.startStr;
+    const end = new Date(selectInfo.endStr);
+    end.setDate(end.getDate() - 1);
+    const inclusiveEndStr = end.toISOString().split('T')[0];
+    
+    setSpanStart(startStr);
+    setSpanEnd(inclusiveEndStr < startStr ? startStr : inclusiveEndStr);
+  };
+
+  const setSpanPreset = (type) => {
+    const now = new Date();
+    if (type === 'today') {
+      setSpanStart(todayIST);
+      setSpanEnd(todayIST);
+    } else if (type === '7days') {
+      const past = new Date();
+      past.setDate(past.getDate() - 6);
+      setSpanStart(past.toISOString().split('T')[0]);
+      setSpanEnd(todayIST);
+    } else if (type === '30days') {
+      const past = new Date();
+      past.setDate(past.getDate() - 29);
+      setSpanStart(past.toISOString().split('T')[0]);
+      setSpanEnd(todayIST);
+    } else if (type === 'month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      setSpanStart(firstDay);
+      setSpanEnd(todayIST);
+    }
+  };
+
+  const downloadSpanAttendancePDF = () => {
+    const token = localStorage.getItem('token');
+    let url = `/api/report/pdf?startDate=${spanStart}&endDate=${spanEnd}&token=${token}`;
+    if (targetUser && targetUser.id) url += `&userId=${targetUser.id}`;
+    window.open(url, '_blank');
+  };
+
+  const downloadSpanDutyPDF = () => {
+    const token = localStorage.getItem('token');
+    window.open(`/api/duty/report/pdf?startDate=${spanStart}&endDate=${spanEnd}&token=${token}`, '_blank');
+  };
+
+  const downloadSpanMovementPDF = () => {
+    const token = localStorage.getItem('token');
+    window.open(`/api/discipline/report/pdf?startDate=${spanStart}&endDate=${spanEnd}&token=${token}`, '_blank');
+  };
+
+  const downloadDayDutyPDF = () => {
+    const token = localStorage.getItem('token');
+    window.open(`/api/duty/report/pdf?date=${dutyDate}&token=${token}`, '_blank');
+  };
+
   const handleExportPDF = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     let url = `/api/report/pdf?token=${token}`;
     if (targetUser && targetUser.id) url += `&userId=${targetUser.id}`;
-    window.location.href = url;
+    window.open(url, '_blank');
   };
 
   const handleUserSelect = (e) => {
@@ -150,21 +213,21 @@ export default function DashboardPage() {
     ? ((stats.total_present / stats.total_records) * 100).toFixed(1)
     : '0.0';
 
+  const daysCount = Math.max(1, Math.round((new Date(spanEnd) - new Date(spanStart)) / (1000 * 60 * 60 * 24)) + 1);
+
   return (
     <PageWrapper>
-      <div className="dashboard-page">
-        <div className="page-header">
+      <div className="dashboard-page fade-in">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1>Welcome back, {targetUser ? `${targetUser.name} (Viewing as Admin)` : (user.name?.split(' - ')[0] || user.name || 'User')}</h1>
-            <p className="subtitle">Here&apos;s an overview of campus operations</p>
+            <p className="subtitle">Here&apos;s an overview of campus operations & reporting</p>
           </div>
-          {user.role === 'admin' && (
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <button className="btn btn-accent" onClick={handleExportPDF} disabled={loadingReport}>
-                {loadingReport ? <span className="spinner"></span> : targetUser ? `📄 Export Instructor's Report` : `📄 Export Global Report`}
-              </button>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-accent shine-effect" onClick={downloadSpanAttendancePDF} disabled={loadingReport}>
+              📄 Export Cumulative Report
+            </button>
+          </div>
         </div>
  
         {cancelledStudents.length > 0 && (
@@ -223,44 +286,143 @@ export default function DashboardPage() {
             <div className="stat-icon">📋</div>
             <div className="stat-info">
               <span className="stat-value">{dutyStudents.length}</span>
-              <span className="stat-label">On Duty ({dutyDate === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) ? 'Today' : 'Selected'})</span>
+              <span className="stat-label">On Duty ({dutyDate === todayIST ? 'Today' : dutyDate})</span>
             </div>
           </div>
         </div>
 
-        <div className="duty-banner-card glass-card" style={{ marginBottom: '24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        {/* 🛡️ Student Duty List Card for Any Selected Date */}
+        <div className="duty-banner-card glass-card" style={{ marginBottom: '24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <h2 style={{ fontSize: '1.2rem', color: '#6366f1', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🛡️ Student Duty List {dutyDate === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) ? '(Today)' : `(${dutyDate})`}
+              🛡️ Student Duty List {dutyDate === todayIST ? '(Today)' : `(${dutyDate})`}
             </h2>
             
-            {(user.role === 'admin' || user.email?.startsWith('faculty@') || user.email === 'faculty@nimbus.com' || user.role === 'faculty') && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>Check Past Duty:</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label htmlFor="dashboard-duty-date" style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8' }}>Check Any Day:</label>
                 <input 
+                  id="dashboard-duty-date"
                   type="date" 
                   value={dutyDate} 
                   onChange={(e) => setDutyDate(e.target.value)}
-                  style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', width: '150px' }}
+                  style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #334155', background: 'rgba(15, 23, 42, 0.6)', color: '#fff', fontSize: '0.9rem', width: '145px' }}
                 />
               </div>
-            )}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button 
+                  className="btn btn-sm btn-outline" 
+                  onClick={() => {
+                    const d = new Date(dutyDate);
+                    d.setDate(d.getDate() - 1);
+                    setDutyDate(d.toISOString().split('T')[0]);
+                  }} 
+                  title="Previous Day"
+                >
+                  ◀
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline" 
+                  onClick={() => setDutyDate(todayIST)} 
+                  title="Today"
+                >
+                  Today
+                </button>
+                <button 
+                  className="btn btn-sm btn-outline" 
+                  onClick={() => {
+                    const d = new Date(dutyDate);
+                    d.setDate(d.getDate() + 1);
+                    setDutyDate(d.toISOString().split('T')[0]);
+                  }} 
+                  title="Next Day"
+                >
+                  ▶
+                </button>
+              </div>
+              <button 
+                className="btn btn-sm btn-primary shine-effect" 
+                onClick={downloadDayDutyPDF}
+                title="Download PDF of students on duty for this date"
+              >
+                📄 Export Day Duty PDF
+              </button>
+            </div>
           </div>
 
           {dutyStudents.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
               {dutyStudents.map(s => (
-                <div key={s.id} className="record-row present" style={{ display: 'flex', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.4)', borderRadius: '10px' }}>
+                <div key={s.id} className="record-row present" style={{ display: 'flex', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.06)', borderRadius: '10px' }}>
                   <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{s.name}</span>
-                  <span style={{ marginLeft: 'auto', background: '#6366f1', color: '#fff', padding: '4px 10px', borderRadius: '50px', fontSize: '0.75rem', fontWeight: 800 }}>{s.roll_number}</span>
+                  <span style={{ marginLeft: 'auto', background: '#6366f1', color: '#fff', padding: '4px 10px', borderRadius: '50px', fontSize: '0.75rem', fontWeight: 800 }}>{s.roll_number || 'N/A'}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p style={{ textAlign: 'center', color: '#64748b', padding: '20px 0', border: '1px dashed #ddd', borderRadius: '10px' }}>
-              No students on duty for this date.
+            <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px 0', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '10px' }}>
+              No students on duty for {dutyDate}.
             </p>
           )}
+        </div>
+
+        {/* 📅 Date Span & Multi-Report Export Hub */}
+        <div className="glass-card" style={{ marginBottom: '24px', padding: '20px 24px', background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%)', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <h2 style={{ fontSize: '1.2rem', margin: 0, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📅 Calendar Span & Duration PDF Export Hub
+              </h2>
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                Select a span below or drag across dates on the calendar to download duration reports:
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <button className="btn btn-sm btn-outline" onClick={() => setSpanPreset('today')}>Today</button>
+              <button className="btn btn-sm btn-outline" onClick={() => setSpanPreset('7days')}>Last 7 Days</button>
+              <button className="btn btn-sm btn-outline" onClick={() => setSpanPreset('30days')}>Last 30 Days</button>
+              <button className="btn btn-sm btn-outline" onClick={() => setSpanPreset('month')}>This Month</button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', padding: '14px 18px', background: 'rgba(15, 23, 42, 0.55)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 600 }}>From:</label>
+                <input 
+                  type="date" 
+                  value={spanStart} 
+                  onChange={e => setSpanStart(e.target.value)}
+                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #334155', background: 'rgba(30, 41, 59, 0.8)', color: '#fff', fontSize: '0.88rem' }}
+                />
+              </div>
+              <span style={{ color: '#64748b' }}>➔</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <label style={{ fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 600 }}>To:</label>
+                <input 
+                  type="date" 
+                  value={spanEnd} 
+                  onChange={e => setSpanEnd(e.target.value)}
+                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #334155', background: 'rgba(30, 41, 59, 0.8)', color: '#fff', fontSize: '0.88rem' }}
+                />
+              </div>
+              <span style={{ fontSize: '0.8rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>
+                {spanStart === spanEnd ? 'Single Day' : `Duration: ${daysCount} Days`}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button className="btn btn-sm btn-primary shine-effect" onClick={downloadSpanAttendancePDF} title="Download Attendance PDF for this duration">
+                📊 Attendance PDF
+              </button>
+              <button className="btn btn-sm btn-accent shine-effect" onClick={downloadSpanDutyPDF} title="Download Discipline Duty Roaster PDF for this duration">
+                📋 Duty Roaster PDF
+              </button>
+              <button className="btn btn-sm btn-outline" onClick={downloadSpanMovementPDF} title="Download Campus Entry/Exit Logs PDF for this duration">
+                🚪 Movement PDF
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className={`dashboard-grid ${user.role === 'admin' ? 'admin-grid' : ''}`}>
@@ -290,11 +452,20 @@ export default function DashboardPage() {
           )}
 
           <div className="calendar-card glass-card">
-            <h2>📅 Attendance Calendar</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+              <h2 style={{ margin: 0 }}>📅 Interactive Calendar</h2>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                💡 Click or drag dates to select a duration span
+              </span>
+            </div>
             <FullCalendarWrapper
               initialView="dayGridMonth"
               events={calendarEvents}
               dateClick={handleDateClick}
+              selectable={true}
+              selectMirror={true}
+              select={handleCalendarSpanSelect}
+              unselectAuto={false}
               headerToolbar={{ left: 'prev,next today', center: 'title', right: '' }}
               height="auto"
             />

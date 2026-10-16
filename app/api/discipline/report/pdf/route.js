@@ -9,15 +9,26 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const filterDate = searchParams.get('date');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
     // Fetch logs with student info
     let logs;
-    if (filterDate) {
+    if (startDate && endDate) {
       logs = await sql`
         SELECT l.student_id, l.action, l.timestamp, s.name as student_name, s.roll_number, s.hostel
         FROM campus_status_logs l
         JOIN students s ON l.student_id = s.id
-        WHERE l.timestamp::date = ${filterDate}
+        WHERE l.timestamp::date >= ${startDate}::date AND l.timestamp::date <= ${endDate}::date
+        ORDER BY l.student_id, l.timestamp ASC
+        LIMIT 3500
+      `;
+    } else if (filterDate) {
+      logs = await sql`
+        SELECT l.student_id, l.action, l.timestamp, s.name as student_name, s.roll_number, s.hostel
+        FROM campus_status_logs l
+        JOIN students s ON l.student_id = s.id
+        WHERE l.timestamp::date = ${filterDate}::date
         ORDER BY l.student_id, l.timestamp ASC
         LIMIT 2500
       `;
@@ -80,10 +91,14 @@ export async function GET(request) {
 
     const nowIST = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
-    doc.fontSize(22).font('Helvetica-Bold').fillColor('#1e3a8a').text('CAMPUS MOVEMENT LOG REPORT', { align: 'center' });
+    doc.fontSize(22).font('Helvetica-Bold').fillColor('#1e3a8a').text('EXTENSION TRACKER', { align: 'center' });
     doc.moveDown(0.2);
+    doc.fontSize(14).font('Helvetica-Bold').fillColor('#3b82f6').text('CAMPUS MOVEMENT LOG REPORT', { align: 'center' });
+    doc.moveDown(0.3);
     doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(`Standard IST Generated On: ${nowIST}`, { align: 'center' });
-    if (filterDate) {
+    if (startDate && endDate) {
+      doc.text(`Duration: ${new Date(startDate).toLocaleDateString('en-IN')} to ${new Date(endDate).toLocaleDateString('en-IN')}`, { align: 'center' });
+    } else if (filterDate) {
       doc.text(`Filtering Logs From: ${new Date(filterDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}`, { align: 'center' });
     }
     doc.moveDown(1.5);
